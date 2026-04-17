@@ -6,6 +6,18 @@ set -e
 # Version: 1.0.0
 # This script automates the setup of MagicMirror on Raspberry Pi with MagicMirrorOS
 
+# Check if running as root
+if [ "$EUID" -ne 0 ]; then 
+    echo "========================================="
+    echo "ERROR: This script must be run as root"
+    echo "========================================="
+    echo ""
+    echo "Please run with sudo:"
+    echo "  curl -fsSL https://raw.githubusercontent.com/twicemind/magicmirror-setup/main/install.sh | sudo bash"
+    echo ""
+    exit 1
+fi
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG_FILE="/var/log/magicmirror-setup.log"
 INSTALL_DIR="/opt/magicmirror-setup"
