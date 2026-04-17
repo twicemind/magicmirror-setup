@@ -1,0 +1,31 @@
+/* Custom CSS for MagicMirror */
+
+body {
+  margin: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.region.fullscreen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+/* Example: Increase font size for better visibility */
+.module {
+  font-size: 1.2em;
+}
+
+/* Example: Custom styling for clock */
+.clock .time {
+  font-size: 4em;
+  font-weight: bold;
+}
+
+/* Example: Custom styling for weather */
+.weather .weather-icon {
+  font-size: 3em;
+}

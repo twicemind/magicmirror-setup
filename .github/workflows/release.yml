@@ -1,0 +1,151 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.0)'
+        required: true
+        default: '1.0.0'
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "TAG=v$VERSION" >> $GITHUB_OUTPUT
+      
+      - name: Create release archive
+        run: |
+          mkdir -p release
+          tar -czf "release/magicmirror-setup-${{ steps.version.outputs.VERSION }}.tar.gz" \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='release' \
+            --exclude='test' \
+            --exclude='*.log' \
+            --exclude='__pycache__' \
+            --exclude='venv' \
+            --exclude='.DS_Store' \
+            .
+          
+          # Create checksums
+          cd release
+          sha256sum "magicmirror-setup-${{ steps.version.outputs.VERSION }}.tar.gz" > checksums.txt
+      
+      - name: Generate changelog
+        id: changelog
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            # For manual releases, use commits since last tag
+            PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+            if [ -z "$PREVIOUS_TAG" ]; then
+              CHANGELOG=$(git log --pretty=format:"- %s (%h)" --no-merges)
+            else
+              CHANGELOG=$(git log ${PREVIOUS_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
+            fi
+          else
+            # For tag pushes, use commits since previous tag
+            PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+            if [ -z "$PREVIOUS_TAG" ]; then
+              CHANGELOG=$(git log --pretty=format:"- %s (%h)" --no-merges)
+            else
+              CHANGELOG=$(git log ${PREVIOUS_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
+            fi
+          fi
+          
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: Create release body
+        run: |
+          cat > release_notes.md << 'EOF'
+          ## 🪞 MagicMirror Setup ${{ steps.version.outputs.VERSION }}
+          
+          ### Installation
+          
+          **Quick install on Raspberry Pi:**
+          ```bash
+          curl -fsSL https://raw.githubusercontent.com/twicemind/magicmirror-setup/${{ steps.version.outputs.TAG }}/install.sh | sudo bash
+          ```
+          
+          **Or download and install:**
+          ```bash
+          wget https://github.com/twicemind/magicmirror-setup/releases/download/${{ steps.version.outputs.TAG }}/magicmirror-setup-${{ steps.version.outputs.VERSION }}.tar.gz
+          tar -xzf magicmirror-setup-${{ steps.version.outputs.VERSION }}.tar.gz
+          cd magicmirror-setup-${{ steps.version.outputs.VERSION }}
+          sudo bash install.sh
+          ```
+          
+          ### What's New
+          
+          ${{ steps.changelog.outputs.changelog }}
+          
+          ### Features
+          
+          - ✅ Automatic OS updates (daily at 02:00)
+          - ✅ Automatic Docker container updates
+          - ✅ Automatic MagicMirror module updates
+          - ✅ WebUI for easy management (port 8080)
+          - ✅ Module management (install/remove)
+          - ✅ Configuration editor
+          - ✅ Display orientation control
+          - ✅ Boot splash screen support
+          
+          ### Requirements
+          
+          - Raspberry Pi 3 or newer
+          - MagicMirrorOS (Raspberry OS 64Bit light)
+          - MagicMirror Docker installation
+          
+          ### Documentation
+          
+          - [README.md](https://github.com/twicemind/magicmirror-setup/blob/${{ steps.version.outputs.TAG }}/README.md)
+          - [INSTALLATION.md](https://github.com/twicemind/magicmirror-setup/blob/${{ steps.version.outputs.TAG }}/INSTALLATION.md)
+          
+          ### Checksums
+          
+          See `checksums.txt` for file verification.
+          EOF
+      
+      - name: Create or update tag
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git tag -a "${{ steps.version.outputs.TAG }}" -m "Release ${{ steps.version.outputs.VERSION }}"
+          git push origin "${{ steps.version.outputs.TAG }}"
+      
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.TAG }}
+          name: MagicMirror Setup ${{ steps.version.outputs.VERSION }}
+          body_path: release_notes.md
+          files: |
+            release/magicmirror-setup-${{ steps.version.outputs.VERSION }}.tar.gz
+            release/checksums.txt
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

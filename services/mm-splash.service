@@ -1,0 +1,15 @@
+[Unit]
+Description=MagicMirror Boot Splash Screen
+DefaultDependencies=no
+After=local-fs.target
+Before=getty@tty1.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/fbi -T 1 -d /dev/fb0 -noverbose -a /opt/splash/splash.png
+StandardInput=tty
+StandardOutput=tty
+Restart=no
+
+[Install]
+WantedBy=sysinit.target

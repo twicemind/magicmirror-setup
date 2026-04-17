@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  # Mock MagicMirror container for testing
+  test-mm:
+    image: node:18-slim
+    container_name: test-mm
+    command: tail -f /dev/null  # Keep container running
+    volumes:
+      - ./mock-modules:/opt/magic_mirror/modules
+      - ./mock-config:/opt/magic_mirror/config
+    networks:
+      - test-network
+
+  # WebUI for testing
+  test-webui:
+    build:
+      context: ../webui
+      dockerfile: Dockerfile.test
+    container_name: test-webui
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../webui:/app
+      - ../scripts:/opt/magicmirror-setup/scripts:ro
+      - ./mock-modules:/opt/mm/mounts/modules
+      - ./mock-config:/opt/mm/mounts/config
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+    depends_on:
+      - test-mm
+    networks:
+      - test-network
+
+networks:
+  test-network:
+    driver: bridge

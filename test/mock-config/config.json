@@ -1,0 +1,11 @@
+{
+  "address": "localhost",
+  "port": 8080,
+  "language": "de",
+  "modules": [
+    {
+      "module": "clock",
+      "position": "top_left"
+    }
+  ]
+}

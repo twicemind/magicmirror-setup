@@ -1,0 +1,15 @@
+[Unit]
+Description=MagicMirror WebUI Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mm
+WorkingDirectory=/opt/magicmirror-setup/webui
+ExecStart=/opt/magicmirror-setup/webui/venv/bin/python app.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

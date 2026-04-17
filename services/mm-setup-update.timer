@@ -1,0 +1,10 @@
+[Unit]
+Description=MagicMirror Setup Self-Update Timer
+Requires=mm-setup-update.service
+
+[Timer]
+OnCalendar=*-*-* 02:30:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

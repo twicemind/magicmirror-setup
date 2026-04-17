@@ -1,0 +1,14 @@
+[Unit]
+Description=MagicMirror Docker Update Service
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/magicmirror-setup/scripts/update-docker.sh
+User=root
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

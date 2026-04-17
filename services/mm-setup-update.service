@@ -1,0 +1,14 @@
+[Unit]
+Description=MagicMirror Setup Self-Update Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/magicmirror-setup/scripts/update-setup.sh
+User=root
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

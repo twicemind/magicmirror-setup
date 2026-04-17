@@ -1,0 +1,712 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header" style="position: relative;">
+    <!-- Language Toggle -->
+    <div class="lang-toggle">
+        <button data-lang="de" class="active" onclick="setLanguage('de')">🇩🇪 DE</button>
+        <button data-lang="en" onclick="setLanguage('en')">🇬🇧 EN</button>
+    </div>
+    
+    <h1 id="dashboard-title">🪞 <span data-i18n="header.title">MagicMirror Setup</span></h1>
+    <p><span data-i18n="header.subtitle">Kontrollzentrum für MagicMirror auf</span> <span id="hostname">...</span></p>
+</div>
+
+<div class="status-bar">
+    <div class="status-card" id="container-status">
+        <h3 data-i18n="dashboard.mm_status">MagicMirror Status</h3>
+        <div class="value">Loading...</div>
+    </div>
+    <div class="status-card">
+        <h3 data-i18n="status.uptime">Laufzeit</h3>
+        <div class="value" id="uptime">Loading...</div>
+    </div>
+    <div class="status-card">
+        <h3>Update Timers</h3>
+        <div class="value" id="timers">Loading...</div>
+    </div>
+    <div class="status-card" id="setup-version">
+        <h3>Setup Version</h3>
+        <div class="value">Loading...</div>
+    </div>
+</div>
+
+<!-- Tab Navigation -->
+<div class="tabs">
+    <div class="tab-nav">
+        <button class="tab-button active" onclick="switchTab('dashboard')">📊 <span data-i18n="tab.dashboard">Übersicht</span></button>
+        <button class="tab-button" onclick="switchTab('modules')">🧩 <span data-i18n="tab.modules">Module</span></button>
+        <button class="tab-button" onclick="switchTab('config')">⚙️ <span data-i18n="tab.config">Konfiguration</span></button>
+        <button class="tab-button" onclick="switchTab('settings')">🖥️ <span data-i18n="tab.settings">Einstellungen</span></button>
+        <button class="tab-button" onclick="switchTab('logs')">📋 <span data-i18n="tab.logs">Logs</span></button>
+    </div>
+    
+    <div class="tab-content">
+        <!-- Dashboard Tab -->
+        <div id="tab-dashboard" class="tab-pane active">
+            <div class="grid">
+                <!-- Setup Update -->
+                <div class="card">
+                    <h2>🔄 <span data-i18n="dashboard.setup_update">Setup Update</span></h2>
+                    <p style="color: #666; margin-bottom: 20px;" data-i18n="dashboard.setup_update_desc">MagicMirror Setup von GitHub aktualisieren</p>
+                    <div id="setup-update-status" style="margin-bottom: 15px;">
+                        <p style="color: #666;" data-i18n="dashboard.checking_updates">Prüfe Updates...</p>
+                    </div>
+                    <div class="button-group">
+                        <button class="button" onclick="checkSetupUpdate()">
+                            <span class="button-text" data-i18n="dashboard.check_updates">Nach Updates suchen</span>
+                        </button>
+                        <button class="button" id="update-setup-btn" onclick="updateSetup()" style="display: none;">
+                            <span class="button-text" data-i18n="dashboard.update_setup">Setup aktualisieren</span>
+                        </button>
+                    </div>
+                    <p style="margin-top: 20px; font-size: 14px; color: #666;" data-i18n="dashboard.auto_updates_note">
+                        ⏰ Auto-Updates mit System-Updates
+                    </p>
+                </div>
+                
+                <!-- System Updates -->
+                <div class="card">
+                    <h2>📦 <span data-i18n="dashboard.system_updates">System-Updates</span></h2>
+                    <p style="color: #666; margin-bottom: 20px;" data-i18n="dashboard.system_updates_desc">Manuelle Updates auslösen oder Status prüfen</p>
+                    <div class="button-group">
+                        <button class="button" onclick="triggerUpdate('os')">
+                            <span class="button-text" data-i18n="updates.os">OS aktualisieren</span>
+                        </button>
+                        <button class="button" onclick="triggerUpdate('docker')">
+                            <span class="button-text" data-i18n="updates.docker">Docker aktualisieren</span>
+                        </button>
+                        <button class="button" onclick="triggerUpdate('modules')">
+                            <span class="button-text" data-i18n="updates.modules">Module aktualisieren</span>
+                        </button>
+                    </div>
+                    <p style="margin-top: 20px; font-size: 14px; color: #666;" data-i18n="dashboard.auto_updates_schedule">
+                        ⏰ Automatische Updates laufen täglich um 02:00
+                    </p>
+                </div>
+                
+                <!-- Container Control -->
+                <div class="card">
+                    <h2>🔄 <span data-i18n="dashboard.container_control">Container-Steuerung</span></h2>
+                    <p style="color: #666; margin-bottom: 20px;" data-i18n="dashboard.container_control_desc">MagicMirror Container verwalten</p>
+                    <div class="button-group">
+                        <button class="button" onclick="restartContainer()">
+                            <span class="button-text" data-i18n="dashboard.restart_container">Container neu starten</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modules Tab -->
+        <div id="tab-modules" class="tab-pane">
+            <div class="card">
+                <h2>🧩 <span data-i18n="modules.installed">Installierte Module</span></h2>
+                <div id="modules-list">
+                    <p style="color: #666;" data-i18n="modules.loading">Lade Module...</p>
+                </div>
+            </div>
+            
+            <div class="card" style="margin-top: 20px;">
+                <h2>➕ <span data-i18n="modules.add">Modul hinzufügen</span></h2>
+                <div class="input-group">
+                    <label for="module-url" data-i18n="modules.git_url">Git Repository URL</label>
+                    <input type="text" id="module-url" placeholder="https://github.com/user/MMM-ModuleName">
+                </div>
+                <div class="input-group">
+                    <label for="module-name">Module Name (optional)</label>
+                    <input type="text" id="module-name" placeholder="MMM-ModuleName">
+                </div>
+                <button class="button" onclick="installModule()">
+                    <span class="button-text" data-i18n="modules.install">Installieren</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Configuration Tab -->
+        <div id="tab-config" class="tab-pane">
+            <div class="card">
+                <h2>⚙️ <span data-i18n="config.editor">Konfigurations-Editor</span></h2>
+                <p style="color: #666; margin-bottom: 20px;">Edit config.json (remember to restart container after saving)</p>
+                <div class="input-group">
+                    <textarea id="config-editor" data-i18n-placeholder="config.loading" placeholder="Lade Konfiguration..."></textarea>
+                </div>
+                <div class="button-group">
+                    <button class="button" onclick="saveConfig()">
+                        <span class="button-text" data-i18n="config.save">Konfiguration speichern</span>
+                    </button>
+                    <button class="button button-secondary" onclick="loadConfig()">
+                        <span class="button-text">Reload</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Settings Tab -->
+        <div id="tab-settings" class="tab-pane">
+            <div class="card">
+                <h2>🖥️ <span data-i18n="settings.display">Display-Einstellungen</span></h2>
+                <p style="color: #666; margin-bottom: 20px;" data-i18n="settings.display_desc">Display-Ausrichtung festlegen (Neustart erforderlich)</p>
+                <div class="input-group">
+                    <label for="orientation" data-i18n="settings.orientation">Ausrichtung</label>
+                    <select id="orientation">
+                        <option value="landscape" data-i18n="settings.landscape">Querformat</option>
+                        <option value="portrait" data-i18n="settings.portrait">Hochformat</option>
+                        <option value="inverted-landscape" data-i18n="settings.inverted_landscape">Querformat (gedreht)</option>
+                        <option value="inverted-portrait" data-i18n="settings.inverted_portrait">Hochformat (gedreht)</option>
+                    </select>
+                </div>
+                <button class="button" onclick="setOrientation()">
+                    <span class="button-text" data-i18n="settings.apply_orientation">Ausrichtung anwenden</span>
+                </button>
+            </div>
+            
+            <div class="card" style="margin-top: 20px;">
+                <h2>⏰ <span data-i18n="settings.updates">Automatische Update-Einstellungen</span></h2>
+                <p style="color: #666; margin-bottom: 20px;" data-i18n="settings.updates_desc">Konfiguriere wann und welche Updates automatisch laufen</p>
+                
+                <div id="update-settings-content">
+                    <p style="color: #666;" data-i18n="settings.loading">Lade Einstellungen...</p>
+                </div>
+            </div>
+            
+            <div class="card" style="margin-top: 20px;">
+                <h2>🌀 <span data-i18n="settings.fan">Lüftersteuerung</span></h2>
+                <p style="color: #666; margin-bottom: 20px;" data-i18n="settings.fan_desc">GPIO-Lüfter-Einstellungen konfigurieren (Neustart nach Änderungen erforderlich)</p>
+                
+                <div id="fan-settings-content">
+                    <p style="color: #666;" data-i18n="settings.loading">Lade Einstellungen...</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Logs Tab -->
+        <div id="tab-logs" class="tab-pane">
+            <div class="card">
+                <h2>📋 <span data-i18n="logs.recent">Aktuelle Logs</span></h2>
+                <div id="logs" class="logs" data-i18n="logs.loading">Lade Logs...</div>
+                <button class="button button-secondary" onclick="loadLogs()" style="margin-top: 15px;">
+                    <span class="button-text" data-i18n="logs.refresh">Logs aktualisieren</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Tab switching
+    function switchTab(tabName) {
+        // Hide all tab panes
+        document.querySelectorAll('.tab-pane').forEach(pane => {
+            pane.classList.remove('active');
+        });
+        
+        // Remove active class from all buttons
+        document.querySelectorAll('.tab-button').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // Show selected tab
+        document.getElementById('tab-' + tabName).classList.add('active');
+        
+        // Add active class to clicked button
+        event.target.classList.add('active');
+        
+        // Load data for specific tabs
+        if (tabName === 'modules') {
+            loadModules();
+        } else if (tabName === 'config') {
+            loadConfig();
+        } else if (tabName === 'logs') {
+            loadLogs();
+        } else if (tabName === 'settings') {
+            loadUpdateSettings();
+            loadFanSettings();
+        }
+    }
+    
+    // Load initial data
+    document.addEventListener('DOMContentLoaded', () => {
+        loadStatus();
+        loadModules();
+        loadConfig();
+        loadLogs();
+        checkSetupUpdate();
+        
+        // Refresh status every 30 seconds
+        setInterval(loadStatus, 30000);
+        // Check for setup updates every 5 minutes
+        setInterval(checkSetupUpdate, 300000);
+    });
+    
+    // Reload dynamic content when language changes
+    document.addEventListener('languageChanged', () => {
+        loadStatus();
+        loadUpdateSettings();
+        loadFanSettings();
+    });
+    
+    // Load system status
+    async function loadStatus() {
+        const data = await apiCall('/api/status');
+        
+        // Update hostname in header
+        if (data.hostname) {
+            document.getElementById('hostname').textContent = data.hostname;
+        }
+        
+        const containerCard = document.getElementById('container-status');
+        if (data.container_running) {
+            containerCard.className = 'status-card running';
+            containerCard.querySelector('.value').textContent = t('dashboard.running');
+        } else {
+            containerCard.className = 'status-card stopped';
+            containerCard.querySelector('.value').textContent = t('dashboard.stopped');
+        }
+        
+        if (data.uptime_hours !== undefined) {
+            document.getElementById('uptime').textContent = data.uptime_hours + 'h';
+        }
+        
+        const timersStatus = data.timers_active ? '✓ Active' : '✗ Inactive';
+        document.getElementById('timers').textContent = timersStatus;
+    }
+    
+    // Load modules
+    async function loadModules() {
+        const data = await apiCall('/api/modules');
+        const modulesList = document.getElementById('modules-list');
+        
+        if (data.length === 0) {
+            modulesList.innerHTML = '<p style="color: #666;">No modules installed</p>';
+            return;
+        }
+        
+        modulesList.innerHTML = '<ul class="module-list">' +
+            data.map(module => `
+                <li class="module-item">
+                    <div>
+                        <div class="module-name">${module.name}</div>
+                        ${module.git_url ? `<div class="module-url">${module.git_url}</div>` : ''}
+                    </div>
+                    <button class="button button-danger" onclick="removeModule('${module.name}')">
+                        Remove
+                    </button>
+                </li>
+            `).join('') +
+            '</ul>';
+    }
+    
+    // Install module
+    async function installModule() {
+        const url = document.getElementById('module-url').value;
+        const name = document.getElementById('module-name').value;
+        
+        if (!url) {
+            showNotification('Please enter a Git URL', 'error');
+            return;
+        }
+        
+        showNotification('Installing module...', 'info');
+        
+        const data = await apiCall('/api/modules/install', {
+            method: 'POST',
+            body: JSON.stringify({ git_url: url, module_name: name })
+        });
+        
+        if (data.success) {
+            showNotification('Module installed successfully', 'success');
+            document.getElementById('module-url').value = '';
+            document.getElementById('module-name').value = '';
+            loadModules();
+        } else {
+            showNotification('Installation failed: ' + data.message, 'error');
+        }
+    }
+    
+    // Remove module
+    async function removeModule(name) {
+        if (!confirm(`Remove module ${name}?`)) return;
+        
+        showNotification('Removing module...', 'info');
+        
+        const data = await apiCall(`/api/modules/${name}`, {
+            method: 'DELETE'
+        });
+        
+        if (data.success) {
+            showNotification('Module removed successfully', 'success');
+            loadModules();
+        } else {
+            showNotification('Removal failed: ' + data.message, 'error');
+        }
+    }
+    
+    // Trigger update
+    async function triggerUpdate(type) {
+        const button = event.target.closest('button');
+        const originalText = button.querySelector('.button-text').textContent;
+        button.disabled = true;
+        button.querySelector('.button-text').innerHTML = '<span class="loading"></span> Updating...';
+        
+        const data = await apiCall(`/api/updates/${type}`, {
+            method: 'POST'
+        });
+        
+        button.disabled = false;
+        button.querySelector('.button-text').textContent = originalText;
+        
+        if (data.success) {
+            showNotification(`${type.toUpperCase()} update completed`, 'success');
+        } else {
+            showNotification(`Update failed: ${data.message}`, 'error');
+        }
+    }
+    
+    // Restart container
+    async function restartContainer() {
+        if (!confirm('Restart MagicMirror container?')) return;
+        
+        showNotification('Restarting container...', 'info');
+        
+        const data = await apiCall('/api/container/restart', {
+            method: 'POST'
+        });
+        
+        if (data.success) {
+            showNotification('Container restarted successfully', 'success');
+            setTimeout(loadStatus, 2000);
+        } else {
+            showNotification('Restart failed: ' + data.message, 'error');
+        }
+    }
+    
+    // Load configuration
+    async function loadConfig() {
+        const data = await apiCall('/api/config');
+        const editor = document.getElementById('config-editor');
+        
+        if (data.success) {
+            editor.value = JSON.stringify(data.config, null, 2);
+        } else {
+            editor.value = '// Configuration not found';
+        }
+    }
+    
+    // Save configuration
+    async function saveConfig() {
+        const editor = document.getElementById('config-editor');
+        
+        try {
+            const config = JSON.parse(editor.value);
+            
+            showNotification('Saving configuration...', 'info');
+            
+            const data = await apiCall('/api/config', {
+                method: 'POST',
+                body: JSON.stringify({ config })
+            });
+            
+            if (data.success) {
+                showNotification('Configuration saved. Remember to restart the container!', 'success');
+            } else {
+                showNotification('Save failed: ' + data.message, 'error');
+            }
+        } catch (e) {
+            showNotification('Invalid JSON: ' + e.message, 'error');
+        }
+    }
+    
+    // Set orientation
+    async function setOrientation() {
+        const orientation = document.getElementById('orientation').value;
+        
+        if (!confirm(`Set display orientation to ${orientation}? System will need to reboot.`)) return;
+        
+        showNotification('Setting orientation...', 'info');
+        
+        const data = await apiCall('/api/orientation', {
+            method: 'POST',
+            body: JSON.stringify({ orientation })
+        });
+        
+        if (data.success) {
+            showNotification('Orientation set. Please reboot the system.', 'success');
+        } else {
+            showNotification('Failed: ' + data.message, 'error');
+        }
+    }
+    
+    // Load logs
+    async function loadLogs() {
+        const data = await apiCall('/api/logs');
+        const logsDiv = document.getElementById('logs');
+        
+        if (data.success) {
+            logsDiv.textContent = data.logs;
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        } else {
+            logsDiv.textContent = 'Failed to load logs';
+        }
+    }
+    
+    // Check for setup updates
+    async function checkSetupUpdate() {
+        const statusDiv = document.getElementById('setup-update-status');
+        const updateBtn = document.getElementById('update-setup-btn');
+        const versionCard = document.getElementById('setup-version');
+        
+        statusDiv.innerHTML = '<p style="color: #666;">Checking for updates...</p>';
+        
+        const data = await apiCall('/api/setup/check-update');
+        
+        if (data.success) {
+            const current = data.current_version;
+            const latest = data.latest_version;
+            
+            // Update version card
+            if (versionCard) {
+                versionCard.querySelector('.value').textContent = current;
+            }
+            
+            if (data.update_available) {
+                statusDiv.innerHTML = `
+                    <div style="padding: 15px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
+                        <p style="margin: 0; color: #92400e; font-weight: 600;">
+                            🆕 Update available!
+                        </p>
+                        <p style="margin: 5px 0 0 0; color: #92400e; font-size: 14px;">
+                            Current: v${current} → Latest: v${latest}
+                        </p>
+                    </div>
+                `;
+                updateBtn.style.display = 'inline-block';
+            } else {
+                statusDiv.innerHTML = `
+                    <div style="padding: 15px; background: #d1fae5; border-left: 4px solid #10b981; border-radius: 4px;">
+                        <p style="margin: 0; color: #065f46; font-weight: 600;">
+                            ✅ Up to date
+                        </p>
+                        <p style="margin: 5px 0 0 0; color: #065f46; font-size: 14px;">
+                            Version: v${current}
+                        </p>
+                    </div>
+                `;
+                updateBtn.style.display = 'none';
+            }
+        } else {
+            statusDiv.innerHTML = `
+                <p style="color: #ef4444;">
+                    ❌ Failed to check for updates
+                </p>
+            `;
+        }
+    }
+    
+    // Update setup
+    async function updateSetup() {
+        if (!confirm('Update MagicMirror Setup to the latest version? The WebUI will restart after the update.')) return;
+        
+        const button = event.target.closest('button');
+        const originalText = button.querySelector('.button-text').textContent;
+        button.disabled = true;
+        button.querySelector('.button-text').innerHTML = '<span class="loading"></span> Updating...';
+        
+        showNotification('Updating setup... This may take a few minutes.', 'info');
+        
+        const data = await apiCall('/api/setup/update', {
+            method: 'POST'
+        });
+        
+        if (data.success) {
+            showNotification('Setup updated successfully! WebUI will reload in 5 seconds...', 'success');
+            setTimeout(() => {
+                window.location.reload();
+            }, 5000);
+        } else {
+            showNotification('Update failed: ' + data.message, 'error');
+            button.disabled = false;
+            button.querySelector('.button-text').textContent = originalText;
+        }
+    }
+    
+    // Load update settings
+    async function loadUpdateSettings() {
+        const container = document.getElementById('update-settings-content');
+        container.innerHTML = '<p style="color: #666;">Loading settings...</p>';
+        
+        const data = await apiCall('/api/update-settings');
+        
+        if (data.success) {
+            const settings = data.settings;
+            
+            container.innerHTML = `
+                ${createUpdateSettingCard(t('settings.os'), t('settings.os_desc'), 'os', settings.os_updates)}
+                ${createUpdateSettingCard(t('settings.docker'), t('settings.docker_desc'), 'docker', settings.docker_updates)}
+                ${createUpdateSettingCard(t('settings.modules'), t('settings.modules_desc'), 'modules', settings.module_updates)}
+                ${createUpdateSettingCard(t('settings.setup'), t('settings.setup_desc'), 'setup', settings.setup_updates)}
+            `;
+        } else {
+            container.innerHTML = '<p style="color: #ef4444;">Failed to load settings</p>';
+        }
+    }
+    
+    // Create update setting card HTML
+    function createUpdateSettingCard(title, subtitle, type, settings) {
+        const enabled = settings.enabled;
+        const schedule = settings.schedule;
+        
+        return `
+            <div style="padding: 20px; border: 2px solid #e5e7eb; border-radius: 8px; margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <div>
+                        <h3 style="margin: 0; color: #333;">${title}</h3>
+                        <p style="margin: 5px 0 0 0; color: #666; font-size: 0.9em;">${subtitle}</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="enable-${type}" ${enabled ? 'checked' : ''} 
+                               onchange="toggleUpdateType('${type}', this.checked)">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="input-group" style="margin-bottom: 0;">
+                    <label for="schedule-${type}">${t('settings.schedule')} (HH:MM:SS)</label>
+                    <input type="time" id="schedule-${type}" value="${schedule.substring(0, 5)}" step="1"
+                           onchange="updateSchedule('${type}', this.value + ':00')"
+                           ${!enabled ? 'disabled' : ''}>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Toggle update type
+    async function toggleUpdateType(type, enabled) {
+        showNotification(`${enabled ? 'Enabling' : 'Disabling'} ${type} updates...`, 'info');
+        
+        const data = await apiCall('/api/update-settings', {
+            method: 'POST',
+            body: JSON.stringify({ type, enabled })
+        });
+        
+        if (data.success) {
+            showNotification(`${type} updates ${enabled ? 'enabled' : 'disabled'}`, 'success');
+            
+            // Enable/disable schedule input
+            const scheduleInput = document.getElementById(`schedule-${type}`);
+            scheduleInput.disabled = !enabled;
+        } else {
+            showNotification('Failed: ' + data.message, 'error');
+            // Revert checkbox
+            document.getElementById(`enable-${type}`).checked = !enabled;
+        }
+    }
+    
+    // Update schedule
+    async function updateSchedule(type, schedule) {
+        showNotification(`Updating ${type} schedule...`, 'info');
+        
+        const data = await apiCall('/api/update-settings', {
+            method: 'POST',
+            body: JSON.stringify({ type, schedule })
+        });
+        
+        if (data.success) {
+            showNotification(`Schedule updated for ${type} updates`, 'success');
+        } else {
+            showNotification('Failed: ' + data.message, 'error');
+        }
+    }
+    
+    // Load fan settings
+    async function loadFanSettings() {
+        const data = await apiCall('/api/fan-settings');
+        
+        if (data.success) {
+            const settings = data.settings;
+            const content = document.getElementById('fan-settings-content');
+            
+            content.innerHTML = `
+                <div style="display: grid; gap: 15px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                        <div>
+                            <strong>${t('settings.fan_enable')}</strong>
+                            <p style="color: #666; font-size: 0.9em; margin: 5px 0 0 0;">${t('settings.fan_enable_desc')}</p>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" ${settings.enabled ? 'checked' : ''} onchange="toggleFan(this.checked)">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div style="display: ${settings.enabled ? 'grid' : 'none'}; gap: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px;" id="fan-config">
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 500;">${t('settings.fan_gpio')}</label>
+                            <select id="fan-gpio" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" onchange="updateFanConfig()">
+                                <option value="4" ${settings.gpio_pin === '4' ? 'selected' : ''}>GPIO 4 (recommended)</option>
+                                <option value="14" ${settings.gpio_pin === '14' ? 'selected' : ''}>GPIO 14</option>
+                                <option value="15" ${settings.gpio_pin === '15' ? 'selected' : ''}>GPIO 15</option>
+                                <option value="17" ${settings.gpio_pin === '17' ? 'selected' : ''}>GPIO 17</option>
+                                <option value="18" ${settings.gpio_pin === '18' ? 'selected' : ''}>GPIO 18</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 500;">${t('settings.fan_temp')}</label>
+                            <input type="number" id="fan-temp" value="${settings.temp_start}" min="40" max="85" step="5" 
+                                   style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" 
+                                   onchange="updateFanConfig()">
+                            <p style="color: #666; font-size: 0.85em; margin: 5px 0 0 0;">${t('settings.fan_temp_desc')}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    // Toggle fan on/off
+    async function toggleFan(enabled) {
+        showNotification(enabled ? 'Enabling fan...' : 'Disabling fan...', 'info');
+        
+        const data = await apiCall('/api/fan-settings', {
+            method: 'POST',
+            body: JSON.stringify({ enabled })
+        });
+        
+        if (data.success) {
+            showNotification(enabled ? 'Fan enabled (reboot required)' : 'Fan disabled (reboot required)', 'success');
+            const config = document.getElementById('fan-config');
+            if (config) {
+                config.style.display = enabled ? 'grid' : 'none';
+            }
+        } else {
+            showNotification('Failed: ' + data.message, 'error');
+            loadFanSettings(); // Reload on error
+        }
+    }
+    
+    // Update fan configuration
+    async function updateFanConfig() {
+        const gpio = document.getElementById('fan-gpio').value;
+        const temp = document.getElementById('fan-temp').value;
+        
+        showNotification('Updating fan configuration...', 'info');
+        
+        const data = await apiCall('/api/fan-settings', {
+            method: 'POST',
+            body: JSON.stringify({ 
+                enabled: true,
+                gpio_pin: gpio,
+                temp_start: temp
+            })
+        });
+        
+        if (data.success) {
+            showNotification('Fan configuration updated (reboot required)', 'success');
+        } else {
+            showNotification('Failed: ' + data.message, 'error');
+        }
+    }
+</script>
+{% endblock %}

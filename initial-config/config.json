@@ -1,0 +1,85 @@
+{
+  "address": "localhost",
+  "port": 8080,
+  "basePath": "/",
+  "ipWhitelist": ["127.0.0.1", "::ffff:127.0.0.1", "::1"],
+  "useHttps": false,
+  "httpsPrivateKey": "",
+  "httpsCertificate": "",
+  "language": "de",
+  "locale": "de-DE",
+  "logLevel": ["INFO", "LOG", "WARN", "ERROR"],
+  "timeFormat": 24,
+  "units": "metric",
+  "modules": [
+    {
+      "module": "alert",
+      "config": {}
+    },
+    {
+      "module": "updatenotification",
+      "position": "top_bar",
+      "config": {}
+    },
+    {
+      "module": "clock",
+      "position": "top_left",
+      "config": {
+        "timezone": "Europe/Berlin",
+        "displaySeconds": false
+      }
+    },
+    {
+      "module": "calendar",
+      "header": "Kalender",
+      "position": "top_left",
+      "config": {
+        "calendars": [
+          {
+            "symbol": "calendar-check",
+            "url": "webcal://www.calendarlabs.com/ical-calendar/ics/76/US_Holidays.ics"
+          }
+        ]
+      }
+    },
+    {
+      "module": "weather",
+      "position": "top_right",
+      "config": {
+        "weatherProvider": "openweathermap",
+        "type": "current",
+        "location": "Berlin",
+        "locationID": "2950159",
+        "apiKey": "YOUR_OPENWEATHERMAP_API_KEY"
+      }
+    },
+    {
+      "module": "weather",
+      "position": "top_right",
+      "header": "Wettervorhersage",
+      "config": {
+        "weatherProvider": "openweathermap",
+        "type": "forecast",
+        "location": "Berlin",
+        "locationID": "2950159",
+        "apiKey": "YOUR_OPENWEATHERMAP_API_KEY"
+      }
+    },
+    {
+      "module": "newsfeed",
+      "position": "bottom_bar",
+      "config": {
+        "feeds": [
+          {
+            "title": "Tagesschau",
+            "url": "https://www.tagesschau.de/xml/rss2"
+          }
+        ],
+        "showSourceTitle": true,
+        "showPublishDate": true,
+        "broadcastNewsFeeds": true,
+        "broadcastNewsUpdates": true
+      }
+    }
+  ]
+}

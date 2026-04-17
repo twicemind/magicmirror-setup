@@ -1,0 +1,102 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  shellcheck:
+    name: Shell Script Linting
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: './scripts'
+          severity: warning
+      
+      - name: Check install script
+        run: shellcheck install.sh
+
+  python-validation:
+    name: Python Code Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          cd webui
+          pip install -r requirements.txt
+          pip install pylint black flake8
+      
+      - name: Check code formatting with Black
+        run: |
+          cd webui
+          black --check app.py || true
+      
+      - name: Lint with flake8
+        run: |
+          cd webui
+          flake8 app.py --max-line-length=120 --ignore=E501,W503 || true
+      
+      - name: Syntax check
+        run: |
+          cd webui
+          python -m py_compile app.py
+
+  json-validation:
+    name: JSON Configuration Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Validate JSON files
+        run: |
+          for file in $(find . -name "*.json" -not -path "*/node_modules/*" -not -path "*/.git/*"); do
+            echo "Validating $file"
+            jq empty "$file" || exit 1
+          done
+
+  integration-test:
+    name: Integration Test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Test installation script syntax
+        run: |
+          bash -n install.sh
+      
+      - name: Test update scripts syntax
+        run: |
+          for script in scripts/*.sh; do
+            echo "Checking $script"
+            bash -n "$script"
+          done
+      
+      - name: Test WebUI startup
+        run: |
+          cd webui
+          python3 -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+          # Test import
+          python -c "import app; print('WebUI imports successfully')"
