@@ -168,6 +168,12 @@ initialize_magicmirror() {
     log "This will install MagicMirror Docker container and Electron."
     log "This may take 5-10 minutes..."
     
+    # Fix Git ownership issue that occurs when running with sudo
+    if [ -d "/opt/mm/.git" ]; then
+        log "Configuring Git safe directory for /opt/mm..."
+        git config --global --add safe.directory /opt/mm || true
+    fi
+    
     # Run MagicMirror installation
     cd /opt/mm/install || exit 1
     if bash install.sh electron; then
