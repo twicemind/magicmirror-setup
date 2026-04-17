@@ -59,7 +59,7 @@ if [ "$NEW_IMAGE_ID" != "$CURRENT_IMAGE_ID" ]; then
     # This assumes MagicMirrorOS uses docker-compose
     if [ -f "/opt/mm/docker-compose.yml" ]; then
         log "Recreating container with docker-compose..."
-        cd /opt/mm
+        cd /opt/mm/run
         docker-compose up -d
     else
         log_error "docker-compose.yml not found. Container needs manual recreation."

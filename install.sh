@@ -305,7 +305,7 @@ setup_initial_config() {
             done
         else
             log_warning "MagicMirror container 'mm' is not running. Skipping module installations."
-            log_info "To install modules later, start the container with: cd /opt/mm && docker compose up -d"
+            log_info "To install modules later, start the container with: cd /opt/mm/run && docker compose up -d"
         fi
     fi
 }
@@ -363,7 +363,7 @@ show_summary() {
         echo "⚠️  MagicMirror container is NOT running"
         echo ""
         echo "To start MagicMirror:"
-        echo "   cd /opt/mm"
+        echo "   cd /opt/mm/run"
         echo "   docker compose up -d"
         echo ""
         echo "MagicMirrorOS has MagicMirror pre-installed in /opt/mm."

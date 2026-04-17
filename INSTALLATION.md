@@ -145,9 +145,9 @@ curl -fsSL https://raw.githubusercontent.com/twicemind/magicmirror-setup/main/in
 ```
 
 **Wichtig:** Bei Updates oder Restarts nutzt MagicMirror die Standard-Wege:
-- Start: `cd /opt/mm && docker compose up -d`
-- Stop: `docker compose down`
-- Restart: `docker compose restart`
+- Start: `cd /opt/mm/run && docker compose up -d`
+- Stop: `cd /opt/mm/run && docker compose down`
+- Restart: `cd /opt/mm/run && docker compose restart`
 
 ---
 
@@ -365,8 +365,8 @@ journalctl -u mm-webui.service -n 50
 ```bash
 docker ps -a
 docker logs mm
-cd /opt/mm
-docker-compose up -d
+cd /opt/mm/run
+docker compose up -d
 ```
 
 **Problem: Display zeigt nichts**

@@ -15,7 +15,7 @@ Dieses Setup baut auf **MagicMirrorOS** auf, einem Debian-basierten Betriebssyst
 
 - **MagicMirror-Installation:** `/opt/mm`
 - **Docker Compose Setup:** MagicMirror läuft als Docker-Container (`mm`)
-- **Start-Befehl:** `cd /opt/mm && docker compose up -d`
+- **Start-Befehl:** `cd /opt/mm/run && docker compose up -d`
 - **Mounts:**
   - `/opt/mm/mounts/config` → MagicMirror-Konfiguration
   - `/opt/mm/mounts/modules` → Zusätzliche Module

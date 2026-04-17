@@ -70,16 +70,19 @@ Nach der ersten Installation nutzen Sie die Standard-MagicMirror-Befehle:
 
 ```bash
 # Container starten
-cd /opt/mm
+cd /opt/mm/run
 docker compose up -d
 
 # Container stoppen
+cd /opt/mm/run
 docker compose down
 
 # Container neustarten
+cd /opt/mm/run
 docker compose restart
 
 # Logs anzeigen
+cd /opt/mm/run
 docker compose logs -f
 ```
 
@@ -283,8 +286,8 @@ docker ps -a
 docker logs mm
 
 # Container manuell starten
-cd /opt/mm
-docker-compose up -d
+cd /opt/mm/run
+docker compose up -d
 ```
 
 ### Module werden nicht aktualisiert
