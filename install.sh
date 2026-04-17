@@ -18,7 +18,31 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Ensure git is installed for cloning
+if ! command -v git &> /dev/null; then
+    echo "Installing git..."
+    apt-get update
+    apt-get install -y git
+fi
+
+# Determine script directory or clone from GitHub
+if [ -z "$BASH_SOURCE" ] || [ "$BASH_SOURCE" = "bash" ] || [ "$BASH_SOURCE" = "/dev/stdin" ]; then
+    # Script is being piped from curl, need to download files
+    GITHUB_REPO="https://github.com/twicemind/magicmirror-setup.git"
+    TEMP_DIR="/tmp/magicmirror-setup-install"
+    
+    echo "Downloading MagicMirror Setup from GitHub..."
+    rm -rf "$TEMP_DIR"
+    git clone --depth 1 "$GITHUB_REPO" "$TEMP_DIR" || {
+        echo "ERROR: Failed to clone repository"
+        exit 1
+    }
+    SCRIPT_DIR="$TEMP_DIR"
+else
+    # Script is running locally
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+fi
+
 LOG_FILE="/var/log/magicmirror-setup.log"
 INSTALL_DIR="/opt/magicmirror-setup"
 MM_MOUNTS="/opt/mm/mounts"
@@ -250,6 +274,12 @@ main() {
     setup_splash_screen
     
     show_summary
+    
+    # Cleanup temporary files if we cloned from GitHub
+    if [ -n "$TEMP_DIR" ] && [ -d "$TEMP_DIR" ]; then
+        log "Cleaning up temporary files..."
+        rm -rf "$TEMP_DIR"
+    fi
     
     log "Installation completed successfully!"
     log "========================================="
