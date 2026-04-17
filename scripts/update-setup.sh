@@ -114,18 +114,19 @@ deactivate
 log "Reloading systemd..."
 systemctl daemon-reload
 
-# Restart WebUI service
-log "Restarting WebUI service..."
-systemctl start mm-webui.service
-
-# Clean up
-rm -rf "$TEMP_DIR"
-
 log "========================================="
 log "Setup updated successfully!"
 log "Old version: $CURRENT_VERSION"
 log "New version: $NEW_VERSION"
 log "Backup available at: $BACKUP_DIR"
 log "========================================="
+
+# Clean up
+rm -rf "$TEMP_DIR"
+
+# Restart WebUI service in the background after a short delay
+# This allows the HTTP response to be sent before the service restarts
+log "Scheduling WebUI restart in 3 seconds..."
+(sleep 3 && systemctl restart mm-webui.service) &
 
 exit 0
