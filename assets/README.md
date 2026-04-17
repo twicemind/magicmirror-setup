@@ -10,7 +10,40 @@ Place your custom splash screen image here as `splash.png`.
 
 ## How it works
 
-The splash screen is displayed during boot using the `fbi` (framebuffer imageviewer) tool. It will hide the console output during boot until MagicMirror starts.
+The splash screen is displayed during boot using:
+1. **mm-splash.service** - Shows splash.png at boot start
+2. **mm-splash-stop.service** - Removes splash when Docker starts
+3. Uses `fbi` (framebuffer imageviewer) to display the image
+
+**Note:** The splash will be visible for ~30-60 seconds during boot.
+
+## Suppressing console output
+
+To hide boot messages and only show the splash screen, edit the kernel command line:
+
+```bash
+sudo nano /boot/firmware/cmdline.txt
+```
+
+Add these parameters to the end of the line:
+```
+quiet splash loglevel=3 vt.global_cursor_default=0
+```
+
+**Before:**
+```
+console=serial0,115200 console=tty1 root=PARTUUID=... rootfstype=ext4 ...
+```
+
+**After:**
+```
+console=serial0,115200 console=tty1 root=PARTUUID=... rootfstype=ext4 ... quiet splash loglevel=3 vt.global_cursor_default=0
+```
+
+**Important:** 
+- On modern Raspberry Pi OS, use `/boot/firmware/cmdline.txt` (not `/boot/cmdline.txt`)
+- Keep everything on ONE line
+- Reboot to apply: `sudo reboot`
 
 ## Creating a custom splash screen
 

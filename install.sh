@@ -318,12 +318,16 @@ setup_splash_screen() {
         mkdir -p /opt/splash
         cp "$INSTALL_DIR/assets/splash.png" /opt/splash/
         
-        # Install splash service
+        # Install splash services
         cp "$INSTALL_DIR/services/mm-splash.service" /etc/systemd/system/ 2>/dev/null || true
+        cp "$INSTALL_DIR/services/mm-splash-stop.service" /etc/systemd/system/ 2>/dev/null || true
         systemctl daemon-reload
         systemctl enable mm-splash.service || true
+        systemctl enable mm-splash-stop.service || true
         
         log "Splash screen configured"
+        log_info "To hide console output during boot, edit /boot/firmware/cmdline.txt"
+        log_info "Add: quiet splash loglevel=3 vt.global_cursor_default=0"
     else
         log_warning "Splash screen image not found, skipping"
     fi

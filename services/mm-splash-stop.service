@@ -1,0 +1,14 @@
+[Unit]
+Description=Stop MagicMirror Boot Splash Screen
+After=docker.service
+Wants=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/killall fbi
+RemainAfterExit=no
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

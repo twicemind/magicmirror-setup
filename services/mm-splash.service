@@ -1,15 +1,17 @@
 [Unit]
 Description=MagicMirror Boot Splash Screen
 DefaultDependencies=no
-After=local-fs.target
-Before=getty@tty1.service
+After=local-fs.target systemd-vconsole-setup.service
+Before=sysinit.target
 
 [Service]
-Type=simple
+Type=oneshot
 ExecStart=/usr/bin/fbi -T 1 -d /dev/fb0 -noverbose -a /opt/splash/splash.png
+ExecStartPost=/bin/sleep 3
+RemainAfterExit=yes
 StandardInput=tty
-StandardOutput=tty
-Restart=no
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=sysinit.target
