@@ -184,7 +184,15 @@ initialize_magicmirror() {
         # Create marker file to prevent re-initialization
         touch "$marker_file"
         log "✓ MagicMirror initialized successfully"
-        log "Container 'mm' should now be running"
+        
+        # Start container with docker compose (install.sh might not leave it running)
+        cd /opt/mm/run || exit 1
+        log "Starting MagicMirror container..."
+        if docker compose up -d 2>&1 | tee -a "$LOG_FILE"; then
+            log "✓ Container started successfully"
+        else
+            log_warning "Failed to start container - you may need to start it manually"
+        fi
     else
         log_error "MagicMirror initialization failed"
         log_error "You may need to run manually: cd /opt/mm/install && sudo bash install.sh electron"
@@ -369,18 +377,32 @@ show_summary() {
     echo "   docker exec -it mm bash             - Enter MagicMirror container"
     echo ""
     
-    # Check if MagicMirror container is running
+    # Check if MagicMirror container is running and start if needed
     if docker ps --format '{{.Names}}' 2>/dev/null | grep -q "^mm$"; then
         echo "✅ MagicMirror container is running"
     else
         echo "⚠️  MagicMirror container is NOT running"
         echo ""
-        echo "To start MagicMirror:"
-        echo "   cd /opt/mm/run"
-        echo "   docker compose up -d"
-        echo ""
-        echo "MagicMirrorOS has MagicMirror pre-installed in /opt/mm."
-        echo "Start the container to use all features of this setup."
+        
+        # Try to start the container
+        if [ -f "/opt/mm/run/compose.yaml" ]; then
+            echo "🔄 Attempting to start MagicMirror container..."
+            cd /opt/mm/run || exit 1
+            if docker compose up -d 2>&1 | tee -a "$LOG_FILE"; then
+                echo "✅ MagicMirror container started successfully"
+            else
+                echo "❌ Failed to start container"
+                echo ""
+                echo "To start MagicMirror manually:"
+                echo "   cd /opt/mm/run"
+                echo "   docker compose up -d"
+            fi
+            cd - > /dev/null || exit 1
+        else
+            echo "To start MagicMirror:"
+            echo "   cd /opt/mm/run"
+            echo "   docker compose up -d"
+        fi
     fi
     
     echo ""
