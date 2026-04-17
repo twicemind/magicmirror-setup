@@ -70,13 +70,13 @@
                     <h2>📦 <span data-i18n="dashboard.system_updates">System-Updates</span></h2>
                     <p style="color: #666; margin-bottom: 20px;" data-i18n="dashboard.system_updates_desc">Manuelle Updates auslösen oder Status prüfen</p>
                     <div class="button-group">
-                        <button class="button" onclick="triggerUpdate('os')">
+                        <button class="button" onclick="triggerUpdate('os', event)">
                             <span class="button-text" data-i18n="updates.os">OS aktualisieren</span>
                         </button>
-                        <button class="button" onclick="triggerUpdate('docker')">
+                        <button class="button" onclick="triggerUpdate('docker', event)">
                             <span class="button-text" data-i18n="updates.docker">Docker aktualisieren</span>
                         </button>
-                        <button class="button" onclick="triggerUpdate('modules')">
+                        <button class="button" onclick="triggerUpdate('modules', event)">
                             <span class="button-text" data-i18n="updates.modules">Module aktualisieren</span>
                         </button>
                     </div>
@@ -357,18 +357,22 @@
     }
     
     // Trigger update
-    async function triggerUpdate(type) {
-        const button = event.target.closest('button');
-        const originalText = button.querySelector('.button-text').textContent;
-        button.disabled = true;
-        button.querySelector('.button-text').innerHTML = '<span class="loading"></span> Updating...';
+    async function triggerUpdate(type, event) {
+        const button = event ? event.target.closest('button') : null;
+        if (button) {
+            const originalText = button.querySelector('.button-text').textContent;
+            button.disabled = true;
+            button.querySelector('.button-text').innerHTML = '<span class="loading"></span> Updating...';
+        }
         
         const data = await apiCall(`/api/updates/${type}`, {
             method: 'POST'
         });
         
-        button.disabled = false;
-        button.querySelector('.button-text').textContent = originalText;
+        if (button) {
+            button.disabled = false;
+            button.querySelector('.button-text').textContent = button.dataset.originalText || 'Update';
+        }
         
         if (data.success) {
             showNotification(`${type.toUpperCase()} update completed`, 'success');
