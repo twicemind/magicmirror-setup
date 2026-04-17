@@ -367,12 +367,17 @@ setup_initial_config() {
     mkdir -p "$MM_MOUNTS/config"
     mkdir -p "$MM_MOUNTS/modules"
     
-    # Copy initial config if provided
-    if [ -f "$INSTALL_DIR/initial-config/config.json" ]; then
-        cp "$INSTALL_DIR/initial-config/config.json" "$MM_MOUNTS/config/"
-        log "Initial config.json installed"
+    # Migrate config.json to config.js if needed
+    if [ -f "$INSTALL_DIR/scripts/migrate-config-to-js.sh" ]; then
+        log "Checking configuration format..."
+        if bash "$INSTALL_DIR/scripts/migrate-config-to-js.sh"; then
+            log "Configuration format verified"
+        else
+            log_warning "Configuration migration had warnings"
+        fi
     fi
     
+    # Copy custom.css if provided
     if [ -f "$INSTALL_DIR/initial-config/custom.css" ]; then
         cp "$INSTALL_DIR/initial-config/custom.css" "$MM_MOUNTS/config/"
         log "Initial custom.css installed"

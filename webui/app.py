@@ -218,21 +218,45 @@ def api_restart_container():
 def api_get_config():
     """Get MagicMirror configuration"""
     try:
+        logger.info(f"Reading config from: {CONFIG_FILE}")
+        logger.info(f"Config file exists: {os.path.exists(CONFIG_FILE)}")
+        
         if os.path.exists(CONFIG_FILE):
             # Read config.js file
             with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
                 config_js = f.read()
             
+            logger.info(f"Config file size: {len(config_js)} bytes")
+            logger.info(f"Config starts with: {config_js[:100] if len(config_js) > 100 else config_js}")
+            
             # Return as text for now - frontend can display it as code editor
-            return jsonify({
+            response = jsonify({
                 "success": True,
                 "config": config_js,
-                "format": "javascript"
+                "format": "javascript",
+                "path": CONFIG_FILE,
+                "size": len(config_js),
+                "timestamp": datetime.now().isoformat()
             })
+            # Add cache-control headers to prevent stale data
+            response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+            response.headers['Pragma'] = 'no-cache'
+            response.headers['Expires'] = '0'
+            return response
         else:
-            return jsonify({"success": False, "message": "Config file not found"}), 404
+            # Check if config.json exists (old format)
+            old_config = os.path.join(CONFIG_DIR, "config.json")
+            if os.path.exists(old_config):
+                logger.warning(f"config.js not found, but config.json exists at {old_config}")
+                return jsonify({
+                    "success": False, 
+                    "message": f"Config file not found at {CONFIG_FILE}. Found old config.json instead. Please migrate to config.js"
+                }), 404
+            
+            logger.error(f"Config file not found at {CONFIG_FILE}")
+            return jsonify({"success": False, "message": f"Config file not found at {CONFIG_FILE}"}), 404
     except Exception as e:
-        logger.error(f"Error reading config: {e}")
+        logger.error(f"Error reading config: {e}", exc_info=True)
         return jsonify({"success": False, "message": str(e)}), 500
 
 
