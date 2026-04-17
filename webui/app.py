@@ -417,10 +417,7 @@ def api_update_setup():
             "async": True
         })
     except Exception as e:
-        logger.error("Update timeout after 300 seconds")
-        return jsonify({"success": False, "message": "Update timeout"})
-    except Exception as e:
-        logger.error(f"Error updating setup: {e}", exc_info=True)
+        logger.error(f"Error starting update: {e}", exc_info=True)
         return jsonify({"success": False, "message": str(e)})
 
 
