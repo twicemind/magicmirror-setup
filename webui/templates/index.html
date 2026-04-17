@@ -127,9 +127,9 @@
         <div id="tab-config" class="tab-pane">
             <div class="card">
                 <h2>⚙️ <span data-i18n="config.editor">Konfigurations-Editor</span></h2>
-                <p style="color: #666; margin-bottom: 20px;">Edit config.json (remember to restart container after saving)</p>
+                <p style="color: #666; margin-bottom: 20px;">Edit config.js (container restarts automatically after saving)</p>
                 <div class="input-group">
-                    <textarea id="config-editor" data-i18n-placeholder="config.loading" placeholder="Lade Konfiguration..."></textarea>
+                    <textarea id="config-editor" data-i18n-placeholder="config.loading" placeholder="Lade Konfiguration..." style="font-family: 'Courier New', monospace; font-size: 13px;"></textarea>
                 </div>
                 <div class="button-group">
                     <button class="button" onclick="saveConfig()">
@@ -389,7 +389,8 @@
         const editor = document.getElementById('config-editor');
         
         if (data.success) {
-            editor.value = JSON.stringify(data.config, null, 2);
+            // Config is now JavaScript text, not JSON
+            editor.value = data.config;
         } else {
             editor.value = '// Configuration not found';
         }
@@ -398,24 +399,38 @@
     // Save configuration
     async function saveConfig() {
         const editor = document.getElementById('config-editor');
+        const configText = editor.value;
+        
+        if (!configText.trim()) {
+            showNotification('Configuration cannot be empty', 'error');
+            return;
+        }
+        
+        if (!confirm('Save configuration? The MagicMirror container will restart automatically.')) return;
+        
+        showNotification('Saving configuration...', 'info');
         
         try {
-            const config = JSON.parse(editor.value);
-            
-            showNotification('Saving configuration...', 'info');
-            
             const data = await apiCall('/api/config', {
                 method: 'POST',
-                body: JSON.stringify({ config })
+                body: JSON.stringify({ config: configText })
             });
             
             if (data.success) {
-                showNotification('Configuration saved. Remember to restart the container!', 'success');
+                if (data.warning) {
+                    showNotification('Configuration saved. Warning: ' + data.warning, 'warning');
+                } else {
+                    showNotification('Configuration saved and MagicMirror restarted successfully!', 'success');
+                }
+                // Wait a bit for container to restart, then reload
+                setTimeout(() => {
+                    window.location.reload();
+                }, 8000);
             } else {
                 showNotification('Save failed: ' + data.message, 'error');
             }
         } catch (e) {
-            showNotification('Invalid JSON: ' + e.message, 'error');
+            showNotification('Error: ' + e.message, 'error');
         }
     }
     

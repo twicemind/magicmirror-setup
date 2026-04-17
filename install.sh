@@ -431,6 +431,17 @@ install_initial_modules() {
             log "Successfully installed $installed_count module(s)"
             echo "   ✅ Successfully installed $installed_count module(s)"
             
+            # Ensure module configurations exist in config.js
+            if [ -f "$INSTALL_DIR/scripts/ensure-module-configs.sh" ]; then
+                log "Ensuring module configurations in config.js..."
+                echo "   📝 Updating config.js with module configurations..."
+                if bash "$INSTALL_DIR/scripts/ensure-module-configs.sh"; then
+                    echo "   ✅ Module configurations updated"
+                else
+                    echo "   ⚠️  Config update had warnings (check log)"
+                fi
+            fi
+            
             # Restart container to load new modules
             log "Restarting MagicMirror container to load new modules..."
             echo "   🔄 Restarting container to load new modules..."

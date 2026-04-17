@@ -20,7 +20,7 @@ CORS(app)
 SCRIPTS_DIR = "/opt/magicmirror-setup/scripts"
 CONFIG_DIR = "/opt/mm/mounts/config"
 MODULES_DIR = "/opt/mm/mounts/modules"
-CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
+CONFIG_FILE = os.path.join(CONFIG_DIR, "config.js")
 LOG_FILE = "/var/log/magicmirror-setup.log"
 
 # Setup logging
@@ -219,9 +219,16 @@ def api_get_config():
     """Get MagicMirror configuration"""
     try:
         if os.path.exists(CONFIG_FILE):
-            with open(CONFIG_FILE, 'r') as f:
-                config = json.load(f)
-            return jsonify({"success": True, "config": config})
+            # Read config.js file
+            with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+                config_js = f.read()
+            
+            # Return as text for now - frontend can display it as code editor
+            return jsonify({
+                "success": True,
+                "config": config_js,
+                "format": "javascript"
+            })
         else:
             return jsonify({"success": False, "message": "Config file not found"}), 404
     except Exception as e:
@@ -242,13 +249,45 @@ def api_save_config():
         # Backup existing config
         if os.path.exists(CONFIG_FILE):
             backup_file = f"{CONFIG_FILE}.backup.{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-            os.rename(CONFIG_FILE, backup_file)
+            import shutil
+            shutil.copy2(CONFIG_FILE, backup_file)
+            logger.info(f"Config backup created: {backup_file}")
         
-        # Save new config
-        with open(CONFIG_FILE, 'w') as f:
-            json.dump(config, f, indent=2)
+        # Save new config.js
+        with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+            f.write(config)
         
-        return jsonify({"success": True, "message": "Configuration saved successfully"})
+        logger.info("Config saved successfully, restarting MagicMirror container...")
+        
+        # Restart MagicMirror container to apply changes
+        try:
+            result = subprocess.run(
+                ["docker", "restart", "mm"],
+                capture_output=True,
+                text=True,
+                timeout=30
+            )
+            
+            if result.returncode == 0:
+                logger.info("Container restarted successfully")
+                return jsonify({
+                    "success": True,
+                    "message": "Configuration saved and MagicMirror restarted successfully"
+                })
+            else:
+                logger.error(f"Container restart failed: {result.stderr}")
+                return jsonify({
+                    "success": True,
+                    "message": "Configuration saved but container restart failed. Please restart manually.",
+                    "warning": result.stderr
+                })
+        except Exception as restart_error:
+            logger.error(f"Error restarting container: {restart_error}")
+            return jsonify({
+                "success": True,
+                "message": "Configuration saved but container restart failed. Please restart manually."
+            })
+            
     except Exception as e:
         logger.error(f"Error saving config: {e}")
         return jsonify({"success": False, "message": str(e)}), 500
