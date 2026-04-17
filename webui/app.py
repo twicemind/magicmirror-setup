@@ -308,8 +308,32 @@ def api_check_setup_update():
 @app.route('/api/setup/update', methods=['POST'])
 def api_update_setup():
     """Update the setup itself"""
-    result = run_script("update-setup.sh")
-    return jsonify(result)
+    # Run with sudo (passwordless sudo configured in /etc/sudoers.d/mm-magicmirror-setup)
+    script_path = os.path.join(SCRIPTS_DIR, "update-setup.sh")
+    
+    if not os.path.exists(script_path):
+        return jsonify({"success": False, "message": "Script not found"})
+    
+    try:
+        cmd = ["sudo", "bash", script_path]
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=300
+        )
+        
+        return jsonify({
+            "success": result.returncode == 0,
+            "message": result.stdout if result.returncode == 0 else result.stderr,
+            "stdout": result.stdout,
+            "stderr": result.stderr
+        })
+    except subprocess.TimeoutExpired:
+        return jsonify({"success": False, "message": "Update timeout"})
+    except Exception as e:
+        logger.error(f"Error updating setup: {e}")
+        return jsonify({"success": False, "message": str(e)})
 
 
 @app.route('/api/update-settings', methods=['GET'])

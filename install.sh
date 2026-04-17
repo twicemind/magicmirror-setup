@@ -241,6 +241,19 @@ install_files() {
 install_services() {
     log "Installing systemd services..."
     
+    # Create log file with correct permissions for user mm
+    touch "$LOG_FILE"
+    chown mm:mm "$LOG_FILE"
+    chmod 664 "$LOG_FILE"
+    log "Log file configured: $LOG_FILE"
+    
+    # Setup sudoers for update-setup.sh (passwordless sudo for user mm)
+    if [ ! -f /etc/sudoers.d/mm-magicmirror-setup ]; then
+        echo "mm ALL=(ALL) NOPASSWD: /opt/magicmirror-setup/scripts/update-setup.sh" > /etc/sudoers.d/mm-magicmirror-setup
+        chmod 440 /etc/sudoers.d/mm-magicmirror-setup
+        log "Sudoers rule configured for setup updates"
+    fi
+    
     # Install service files
     cp "$INSTALL_DIR/services/"*.service /etc/systemd/system/ 2>/dev/null || true
     cp "$INSTALL_DIR/services/"*.timer /etc/systemd/system/ 2>/dev/null || true
