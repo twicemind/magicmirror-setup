@@ -53,6 +53,19 @@ log "Creating backup..."
 if [ -d "$INSTALL_DIR" ]; then
     cp -r "$INSTALL_DIR" "$BACKUP_DIR"
     log "Backup created at: $BACKUP_DIR"
+    
+    # Clean up old backups (keep only the 3 most recent)
+    log "Cleaning up old backups..."
+    BACKUP_COUNT=$(find /opt -maxdepth 1 -type d -name "magicmirror-setup-backup-*" 2>/dev/null | wc -l)
+    if [ "$BACKUP_COUNT" -gt 3 ]; then
+        # Find all backups, sort by modification time (oldest first), skip the 3 newest, and delete the rest
+        find /opt -maxdepth 1 -type d -name "magicmirror-setup-backup-*" -printf '%T@ %p\n' 2>/dev/null | \
+            sort -n | head -n -3 | cut -d' ' -f2- | \
+            while read -r old_backup; do
+                log "Removing old backup: $old_backup"
+                rm -rf "$old_backup"
+            done
+    fi
 fi
 
 # Clone/pull latest version to temp directory
