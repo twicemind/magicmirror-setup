@@ -250,7 +250,8 @@ install_files() {
     elif [ -d "$INSTALL_DIR" ] && [ "$(ls -A $INSTALL_DIR)" ]; then
         # Directory exists but is not a git repo - backup and clone
         log_warning "Directory exists but is not a git repository"
-        local BACKUP_DIR="/opt/magicmirror-setup-backup-$(date +%Y%m%d_%H%M%S)"
+        local BACKUP_DIR
+        BACKUP_DIR="/opt/magicmirror-setup-backup-$(date +%Y%m%d_%H%M%S)"
         log "Creating backup: $BACKUP_DIR"
         mv "$INSTALL_DIR" "$BACKUP_DIR"
         
