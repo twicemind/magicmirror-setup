@@ -25,11 +25,12 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-log "System will reboot in 5 seconds..."
+log "System will reboot now..."
 log "========================================="
 
-# Schedule reboot in 5 seconds to allow HTTP response to be sent
-shutdown -r +0.1 "System reboot requested via MagicMirror WebUI"
+# Reboot immediately (using now or +0 for immediate reboot)
+# Brief delay allows HTTP response to be sent back
+shutdown -r now "System reboot requested via MagicMirror WebUI" &
 
 echo "System reboot initiated"
 exit 0
