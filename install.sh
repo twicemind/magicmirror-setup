@@ -301,14 +301,19 @@ install_services() {
     # Setup sudoers for update-setup.sh (passwordless sudo for user mm)
     if [ ! -f /etc/sudoers.d/mm-magicmirror-setup ]; then
         cat > /etc/sudoers.d/mm-magicmirror-setup <<EOF
-# Allow user mm to run update-setup.sh without password
+# Allow user mm to run management scripts without password
 mm ALL=(ALL) NOPASSWD: /opt/magicmirror-setup/scripts/update-setup.sh
-mm ALL=(ALL) NOPASSWD: /usr/bin/bash /opt/magicmirror-setup/scripts/update-setup.sh
+mm ALL=(ALL) NOPASSWD: /opt/magicmirror-setup/scripts/update-os.sh
+mm ALL=(ALL) NOPASSWD: /opt/magicmirror-setup/scripts/update-docker.sh
+mm ALL=(ALL) NOPASSWD: /opt/magicmirror-setup/scripts/update-modules.sh
+mm ALL=(ALL) NOPASSWD: /opt/magicmirror-setup/scripts/restart-mm.sh
+mm ALL=(ALL) NOPASSWD: /opt/magicmirror-setup/scripts/reboot-system.sh
+mm ALL=(ALL) NOPASSWD: /usr/bin/bash /opt/magicmirror-setup/scripts/*
 # Allow WebUI to restart itself after config changes
 mm ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart mm-webui.service
 EOF
         chmod 440 /etc/sudoers.d/mm-magicmirror-setup
-        log "Sudoers rules configured for setup updates and WebUI restart"
+        log "Sudoers rules configured for all management scripts"
     fi
     
     # Install service files
