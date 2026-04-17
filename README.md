@@ -139,7 +139,44 @@ Das System richtet automatisch folgende Update-Services ein:
 - **Umfang**: Alle installierten Git-Module
 - **Auto-Restart**: Ja, nach erfolgreichen Updates
 
-## 📦 Modul-Management
+## � Manuelle Updates
+
+Das Setup kann jederzeit manuell aktualisiert werden:
+
+### Methode 1: Via WebUI (Empfohlen)
+
+1. WebUI öffnen (`http://<raspberry-pi-ip>:8081`)
+2. Im Dashboard auf "Nach Updates suchen" klicken
+3. Falls verfügbar: "Setup aktualisieren" klicken
+4. Seite lädt automatisch neuDie WebUI zeigt direkt an ob Updates verfügbar sind.
+
+### Methode 2: Quick Update Script (CLI)
+
+Sicheres Update mit automatischer Konfliktauflösung:
+
+```bash
+cd /opt/magicmirror-setup
+sudo bash scripts/update-from-git.sh
+```
+
+**Was macht dieses Script:**
+- ✅ Holt neueste Änderungen von GitHub
+- ✅ Verwirft lokale Änderungen (verhindert Merge-Konflikte)
+- ✅ Aktualisiert auf neueste Version
+- ✅ Startet WebUI automatisch neu
+
+### Methode 3: Full Update Script
+
+Für ein umfassendes Update (gleiche Logik wie automatisches Update):
+
+```bash
+cd /opt/magicmirror-setup
+sudo bash scripts/update-setup.sh
+```
+
+**Wichtig:** Verwenden Sie **NICHT** `git pull` direkt, da dies zu Merge-Konflikten führen kann wenn lokale Änderungen existieren. Nutzen Sie stattdessen das `update-from-git.sh` Script.
+
+## �📦 Modul-Management
 
 ### Modul über WebUI installieren
 
