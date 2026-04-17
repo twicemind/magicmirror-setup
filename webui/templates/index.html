@@ -76,10 +76,10 @@
                         <button class="button" onclick="checkWlanUpdate()">
                             <span class="button-text" data-i18n="dashboard.check_updates">Nach Updates suchen</span>
                         </button>
-                        <button class="button button-success" id="install-wlan-btn" onclick="installWlan()" style="display: none;">
+                        <button class="button button-success" id="install-wlan-btn" onclick="installWlan(event)" style="display: none;">
                             <span class="button-text" data-i18n="dashboard.install_wlan">WLAN Manager installieren</span>
                         </button>
-                        <button class="button" id="update-wlan-btn" onclick="updateWlan()" style="display: none;">
+                        <button class="button" id="update-wlan-btn" onclick="updateWlan(event)" style="display: none;">
                             <span class="button-text" data-i18n="dashboard.update_wlan">WLAN Manager aktualisieren</span>
                         </button>
                     </div>
@@ -805,7 +805,7 @@
     }
     
     // Install WLAN manager
-    async function installWlan() {
+    async function installWlan(event) {
         if (!confirm('Install WLAN Manager? This will take 2-3 minutes and requires an internet connection.')) return;
         
         const button = event.target.closest('button');
@@ -841,7 +841,7 @@
     }
     
     // Update WLAN manager
-    async function updateWlan() {
+    async function updateWlan(event) {
         if (!confirm('Update WLAN Manager to the latest version? WLAN services will restart after the update.')) return;
         
         const button = event.target.closest('button');
