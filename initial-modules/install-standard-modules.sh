@@ -5,10 +5,12 @@
 set -e
 
 CONTAINER_NAME="mm"
+
+# Module definitions: URL|ModuleName
 MODULES_TO_INSTALL=(
-    "https://github.com/b-reich/MMM-PirateSkyForecast.git:MMM-PirateSkyForecast"
-    "https://github.com/KristjanESPERANTO/MMM-SystemTemperature.git:MMM-SystemTemperature"
-    "https://github.com/Jopyth/MMM-Remote-Control.git:MMM-Remote-Control"
+    "https://github.com/b-reich/MMM-PirateSkyForecast.git|MMM-PirateSkyForecast"
+    "https://github.com/KristjanESPERANTO/MMM-SystemTemperature.git|MMM-SystemTemperature"
+    "https://github.com/Jopyth/MMM-Remote-Control.git|MMM-Remote-Control"
 )
 
 log() {
@@ -27,7 +29,8 @@ INSTALLED_COUNT=0
 SKIPPED_COUNT=0
 
 for module_entry in "${MODULES_TO_INSTALL[@]}"; do
-    IFS=':' read -r GIT_URL MODULE_NAME <<< "$module_entry"
+    # Use pipe as delimiter to avoid issues with : in https://
+    IFS='|' read -r GIT_URL MODULE_NAME <<< "$module_entry"
     
     log "Checking module: $MODULE_NAME"
     
