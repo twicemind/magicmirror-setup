@@ -393,6 +393,8 @@ install_initial_modules() {
         fi
     fi
     
+    echo "   🔍 Looking for installation scripts in $INSTALL_DIR/initial-modules..."
+    
     if [ -d "$INSTALL_DIR/initial-modules" ] && [ "$(ls -A $INSTALL_DIR/initial-modules 2>/dev/null)" ]; then
         # Check if MM container is running
         if ! docker ps --format '{{.Names}}' 2>/dev/null | grep -q "^mm$"; then
@@ -403,18 +405,20 @@ install_initial_modules() {
         
         local installed_count=0
         local found_modules=0
+        echo "   📂 Scanning for .sh files..."
+        
         for module_file in "$INSTALL_DIR/initial-modules"/*.sh; do
             # Skip example files
             if [ -f "$module_file" ] && [[ ! "$module_file" =~ \.example\.sh$ ]]; then
                 ((found_modules++))
                 log "Running $(basename "$module_file")..."
-                echo "   📦 Installing $(basename "$module_file")..."
-                if bash "$module_file"; then
+                echo "   🚀 Executing $(basename "$module_file")..."
+                if bash "$module_file" 2>&1; then
                     ((installed_count++))
-                    echo "      ✅ Installed successfully"
+                    echo "      ✅ Script completed successfully"
                 else
                     log_warning "Module installation script failed: $(basename "$module_file")"
-                    echo "      ⚠️  Installation failed"
+                    echo "      ⚠️  Script execution failed"
                 fi
             fi
         done
