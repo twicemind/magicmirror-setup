@@ -93,9 +93,9 @@ if [ "$CURRENT_VERSION" = "$NEW_VERSION" ] && [ "$1" != "--force" ]; then
     exit 0
 fi
 
-# Stop WebUI service temporarily
-log "Stopping WebUI service..."
-systemctl stop mm-webui.service || true
+# Note: We do NOT stop the WebUI service here because this script
+# is often called BY the WebUI, which would kill its own process.
+# The service will be restarted at the end of the update.
 
 # Preserve configuration and data
 log "Preserving custom configurations..."
