@@ -406,9 +406,91 @@ setup_splash_screen() {
         systemctl enable mm-splash.service || true
         systemctl enable mm-splash-stop.service || true
         
-        log "Splash screen configured"
-        log_info "To hide console output during boot, edit /boot/firmware/cmdline.txt"
-        log_info "Add: quiet splash loglevel=3 vt.global_cursor_default=0"
+        # Configure boot parameters for silent boot
+        local CMDLINE_FILE="/boot/firmware/cmdline.txt"
+        if [ -f "$CMDLINE_FILE" ]; then
+            # Backup original cmdline.txt
+            if [ ! -f "$CMDLINE_FILE.backup" ]; then
+                cp "$CMDLINE_FILE" "$CMDLINE_FILE.backup"
+                log "Backed up original cmdline.txt"
+            fi
+            
+            # Read current cmdline
+            local CMDLINE
+            CMDLINE=$(cat "$CMDLINE_FILE")
+            
+            # Add silent boot parameters if not already present
+            local NEEDS_UPDATE=false
+            
+            if [[ ! "$CMDLINE" =~ quiet ]]; then
+                CMDLINE="$CMDLINE quiet"
+                NEEDS_UPDATE=true
+            fi
+            
+            if [[ ! "$CMDLINE" =~ splash ]]; then
+                CMDLINE="$CMDLINE splash"
+                NEEDS_UPDATE=true
+            fi
+            
+            if [[ ! "$CMDLINE" =~ loglevel ]]; then
+                CMDLINE="$CMDLINE loglevel=0"
+                NEEDS_UPDATE=true
+            fi
+            
+            if [[ ! "$CMDLINE" =~ logo.nologo ]]; then
+                CMDLINE="$CMDLINE logo.nologo"
+                NEEDS_UPDATE=true
+            fi
+            
+            if [[ ! "$CMDLINE" =~ vt.global_cursor_default ]]; then
+                CMDLINE="$CMDLINE vt.global_cursor_default=0"
+                NEEDS_UPDATE=true
+            fi
+            
+            if [[ ! "$CMDLINE" =~ console=tty3 ]]; then
+                # Redirect console to tty3 (invisible)
+                CMDLINE="$CMDLINE console=tty3"
+                NEEDS_UPDATE=true
+            fi
+            
+            if [ "$NEEDS_UPDATE" = true ]; then
+                echo "$CMDLINE" > "$CMDLINE_FILE"
+                log "Updated boot parameters for silent boot"
+                log_info "Changes will take effect after reboot"
+            else
+                log "Boot parameters already configured"
+            fi
+        else
+            log_warning "cmdline.txt not found at $CMDLINE_FILE"
+        fi
+        
+        # Disable getty on tty1 to prevent login prompt
+        systemctl disable getty@tty1.service 2>/dev/null || true
+        log "Disabled getty on tty1 (no login prompt)"
+        
+        # Disable cursor blinking on all ttys
+        if [ ! -f /etc/systemd/system/nocursor.service ]; then
+            cat > /etc/systemd/system/nocursor.service <<'EOF'
+[Unit]
+Description=Disable cursor blinking
+DefaultDependencies=no
+After=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'echo 0 > /sys/class/graphics/fbcon/cursor_blink'
+RemainAfterExit=yes
+
+[Install]
+WantedBy=sysinit.target
+EOF
+            systemctl daemon-reload
+            systemctl enable nocursor.service || true
+            log "Configured cursor hiding"
+        fi
+        
+        log "Splash screen configured for silent boot"
+        log_info "Reboot to see the silent boot experience"
     else
         log_warning "Splash screen image not found, skipping"
     fi

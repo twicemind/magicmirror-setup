@@ -214,12 +214,17 @@ Um einen benutzerdefinierten Splash Screen während des Bootvorgangs anzuzeigen:
 
 1. Erstellen Sie ein PNG-Bild (empfohlen: 1920x1080 für Full HD)
 2. Speichern Sie es als `assets/splash.png`
-3. Führen Sie die Installation durch oder kopieren Sie es manuell:
+3. Führen Sie die Installation durch
 
-```bash
-sudo cp splash.png /opt/splash/splash.png
-sudo systemctl enable mm-splash.service
-```
+**Das Setup konfiguriert automatisch:**
+- ✅ Silent Boot (keine Console-Ausgaben)
+- ✅ Splash Screen Anzeige während des Bootvorgangs
+- ✅ Unterdrückung von Boot-Logos und Cursor
+- ✅ Kein Login-Prompt auf dem Bildschirm
+
+**Ergebnis:** Beim Booten wird nur der Splash Screen angezeigt, bis MagicMirror startet - keine Console-Ausgaben, keine Boot-Logs, keine Login-Aufforderung.
+
+Details und manuelle Konfiguration: Siehe [assets/README.md](assets/README.md)
 
 ## 🔧 Systemd Services
 
