@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# Ensure script runs with bash (not sh/dash)
+if [ -z "$BASH_VERSION" ]; then
+    # Re-execute with bash
+    exec bash "$0" "$@"
+    exit 1
+fi
+
 set -e
 
 # MagicMirror Setup Installation Script
@@ -7,7 +14,7 @@ set -e
 # This script automates the setup of MagicMirror on Raspberry Pi with MagicMirrorOS
 
 # Check if running as root
-if [ "$EUID" -ne 0 ]; then 
+if [ "$EUID" -ne 0 ]; then
     echo "========================================="
     echo "ERROR: This script must be run as root"
     echo "========================================="
