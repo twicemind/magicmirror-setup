@@ -371,23 +371,39 @@ setup_initial_config() {
         cp "$INSTALL_DIR/initial-config/custom.css" "$MM_MOUNTS/config/"
         log "Initial custom.css installed"
     fi
+}
+
+# Install initial modules (must be called after container is running)
+install_initial_modules() {
+    log "Installing initial modules..."
     
-    # Install initial modules
     if [ -d "$INSTALL_DIR/initial-modules" ] && [ "$(ls -A $INSTALL_DIR/initial-modules 2>/dev/null)" ]; then
         # Check if MM container is running
-        if docker ps --format '{{.Names}}' 2>/dev/null | grep -q "^mm$"; then
-            log "Installing initial modules..."
-            for module_file in "$INSTALL_DIR/initial-modules"/*.sh; do
-                # Skip example files
-                if [ -f "$module_file" ] && [[ ! "$module_file" =~ \.example\.sh$ ]]; then
-                    log "Running $(basename "$module_file")..."
-                    bash "$module_file" || log_warning "Module installation script failed"
-                fi
-            done
-        else
-            log_warning "MagicMirror container 'mm' is not running. Skipping module installations."
-            log_info "To install modules later, start the container with: cd /opt/mm/run && docker compose up -d"
+        if ! docker ps --format '{{.Names}}' 2>/dev/null | grep -q "^mm$"; then
+            log_error "MagicMirror container 'mm' is not running. Cannot install modules."
+            return 1
         fi
+        
+        local installed_count=0
+        for module_file in "$INSTALL_DIR/initial-modules"/*.sh; do
+            # Skip example files
+            if [ -f "$module_file" ] && [[ ! "$module_file" =~ \.example\.sh$ ]]; then
+                log "Running $(basename "$module_file")..."
+                if bash "$module_file"; then
+                    ((installed_count++))
+                else
+                    log_warning "Module installation script failed: $(basename "$module_file")"
+                fi
+            fi
+        done
+        
+        if [ $installed_count -gt 0 ]; then
+            log "Successfully installed $installed_count module(s)"
+        else
+            log "No modules were installed"
+        fi
+    else
+        log "No initial modules found to install"
     fi
 }
 
@@ -536,6 +552,17 @@ show_summary() {
             cd /opt/mm/run || exit 1
             if docker compose up -d 2>&1 | tee -a "$LOG_FILE"; then
                 echo "✅ MagicMirror container started successfully"
+                echo ""
+                
+                # Wait a moment for container to be fully ready
+                echo "⏳ Waiting for container to be ready..."
+                sleep 3
+                
+                # Install initial modules now that container is running
+                if [ -d "$INSTALL_DIR/initial-modules" ] && [ "$(ls -A $INSTALL_DIR/initial-modules 2>/dev/null)" ]; then
+                    echo "📦 Installing initial modules..."
+                    install_initial_modules
+                fi
             else
                 echo "❌ Failed to start container"
                 echo ""
@@ -548,6 +575,13 @@ show_summary() {
             echo "To start MagicMirror:"
             echo "   cd /opt/mm/run"
             echo "   docker compose up -d"
+        fi
+    else
+        # Container is already running, check if we need to install modules
+        if [ -d "$INSTALL_DIR/initial-modules" ] && [ "$(ls -A $INSTALL_DIR/initial-modules 2>/dev/null)" ]; then
+            echo ""
+            echo "📦 Installing initial modules..."
+            install_initial_modules
         fi
     fi
     
