@@ -10,7 +10,7 @@ fi
 set -e
 
 # MagicMirror Setup Installation Script
-# Version: 1.0.0
+# See VERSION file for current version
 # This script automates the setup of MagicMirror on Raspberry Pi with MagicMirrorOS
 
 # Check if running as root

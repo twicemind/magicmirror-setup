@@ -4,7 +4,7 @@
 
 MagicMirror Setup ist eine vollständige Automatisierungslösung für die Installation, Konfiguration und Wartung von MagicMirror² auf Raspberry Pi mit **MagicMirrorOS**.
 
-**Version:** 1.1.3  
+**Version:** 1.15.0  
 **Lizenz:** MIT  
 **Repository:** https://github.com/twicemind/magicmirror-setup
 

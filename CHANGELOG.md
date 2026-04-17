@@ -7,6 +7,25 @@ und dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ## [Unreleased]
 
+## [1.15.0] - 2026-04-17
+
+### Added
+- **WiFi Management Integration**: MagicMirror WLAN Manager wird automatisch installiert
+  - Neues Installations-Script: `initial-modules/install-magicmirror-wlan.sh`
+  - Automatische Netzwerk-Überwachung (alle 30 Sekunden)
+  - HotSpot-Fallback bei fehlender Internetverbindung
+  - Web-basierte WiFi-Konfiguration (Port 8765)
+  - WiFi-Scanner und Netzwerk-Auswahl
+  - MagicMirror-Modul (MMM-WLANManager) mit QR-Code
+  - Automatische Wiederverbindung wenn Netzwerk verfügbar
+  - Integration mit https://github.com/twicemind/magicmirror-wlan
+- **Dokumentation**: Umfassende WiFi-Management-Dokumentation in README.md und PROJECT_OVERVIEW.md
+- **Services**: Automatische Installation von `wlan-network-monitor.service` und `wlan-webui.service`
+
+### Changed
+- Updated documentation to reflect WiFi management capabilities
+- Removed "MagicMirror-WLAN Projekt-Integration" from future features (now implemented)
+
 ## [1.2.0] - 2026-04-17
 
 ### Added
