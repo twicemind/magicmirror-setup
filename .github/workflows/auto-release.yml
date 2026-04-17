@@ -187,7 +187,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.version_bump.outputs.NEW_TAG }}
-          name: Release ${{ steps.version_bump.outputs.NEW_VERSION }}
+          name: MagicMirror Setup ${{ steps.version_bump.outputs.NEW_VERSION }}
           body: |
             ## 🪞 MagicMirror Setup ${{ steps.version_bump.outputs.NEW_VERSION }}
             
