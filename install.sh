@@ -310,6 +310,7 @@ mm ALL=(ALL) NOPASSWD: /opt/magicmirror-setup/scripts/update-modules.sh
 mm ALL=(ALL) NOPASSWD: /opt/magicmirror-setup/scripts/restart-mm.sh
 mm ALL=(ALL) NOPASSWD: /opt/magicmirror-setup/scripts/reboot-system.sh
 mm ALL=(ALL) NOPASSWD: /usr/bin/bash /opt/magicmirror-setup/scripts/*
+mm ALL=(ALL) NOPASSWD: /usr/bin/bash /opt/magicmirror-setup/initial-modules/*
 # Allow WebUI to restart itself after config changes
 mm ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart mm-webui.service
 EOF
