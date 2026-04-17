@@ -619,6 +619,64 @@
         }
     }
     
+    // Load systemd services and timers status
+    async function loadServicesStatus() {
+        const container = document.getElementById('services-status-content');
+        container.innerHTML = '<p style="color: #666;">Lade Status...</p>';
+        
+        const data = await apiCall('/api/services-status');
+        
+        if (data.success) {
+            let html = '<div style="display: grid; gap: 20px;">';
+            
+            // Services section
+            html += '<div>';
+            html += '<h3 style="margin-bottom: 10px; color: #333;">Services</h3>';
+            html += '<div style="display: grid; gap: 8px;">';
+            
+            for (const [service, state] of Object.entries(data.services)) {
+                const statusColor = state === 'active' ? '#10b981' : state === 'inactive' ? '#f59e0b' : '#ef4444';
+                const statusIcon = state === 'active' ? '✅' : state === 'inactive' ? '⚠️' : '❌';
+                
+                html += `
+                    <div style="padding: 12px; background: #f3f4f6; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 500;">${service.replace('.service', '')}</span>
+                        <span style="color: ${statusColor}; font-weight: 600;">${statusIcon} ${state}</span>
+                    </div>
+                `;
+            }
+            
+            html += '</div></div>';
+            
+            // Timers section
+            html += '<div>';
+            html += '<h3 style="margin-bottom: 10px; color: #333;">Update Timers</h3>';
+            html += '<div style="display: grid; gap: 8px;">';
+            
+            for (const [timer, info] of Object.entries(data.timers)) {
+                const statusColor = info.state === 'active' ? '#10b981' : '#f59e0b';
+                const statusIcon = info.state === 'active' ? '✅' : '⚠️';
+                
+                html += `
+                    <div style="padding: 12px; background: #f3f4f6; border-radius: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <span style="font-weight: 500;">${timer.replace('.timer', '')}</span>
+                            <span style="color: ${statusColor}; font-weight: 600;">${statusIcon} ${info.state}</span>
+                        </div>
+                        ${info.state === 'active' ? `<div style="font-size: 12px; color: #666;">Next: ${info.next_run}</div>` : ''}
+                    </div>
+                `;
+            }
+            
+            html += '</div></div>';
+            html += '</div>';
+            
+            container.innerHTML = html;
+        } else {
+            container.innerHTML = '<p style="color: #ef4444;">Failed to load services status</p>';
+        }
+    }
+    
     // Update setup
     async function updateSetup() {
         if (!confirm('Update MagicMirror Setup to the latest version? The WebUI will restart after the update.')) return;
