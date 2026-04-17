@@ -31,7 +31,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def run_script(script_name, *args):
+def run_script(script_name, *args, use_sudo=False):
     """Run a script and return the result"""
     script_path = os.path.join(SCRIPTS_DIR, script_name)
     
@@ -39,7 +39,12 @@ def run_script(script_name, *args):
         return {"success": False, "message": f"Script not found: {script_name}"}
     
     try:
-        cmd = ["bash", script_path] + list(args)
+        # Use sudo for scripts that require root permissions
+        if use_sudo:
+            cmd = ["sudo", "bash", script_path] + list(args)
+        else:
+            cmd = ["bash", script_path] + list(args)
+        
         result = subprocess.run(
             cmd,
             capture_output=True,
@@ -189,35 +194,35 @@ def api_remove_module(module_name):
 @app.route('/api/modules/update', methods=['POST'])
 def api_update_modules():
     """Update all modules"""
-    result = run_script("update-modules.sh")
+    result = run_script("update-modules.sh", use_sudo=True)
     return jsonify(result)
 
 
 @app.route('/api/updates/os', methods=['POST'])
 def api_update_os():
     """Trigger OS update"""
-    result = run_script("update-os.sh")
+    result = run_script("update-os.sh", use_sudo=True)
     return jsonify(result)
 
 
 @app.route('/api/updates/docker', methods=['POST'])
 def api_update_docker():
     """Trigger Docker update"""
-    result = run_script("update-docker.sh")
+    result = run_script("update-docker.sh", use_sudo=True)
     return jsonify(result)
 
 
 @app.route('/api/container/restart', methods=['POST'])
 def api_restart_container():
     """Restart MagicMirror container"""
-    result = run_script("restart-mm.sh")
+    result = run_script("restart-mm.sh", use_sudo=True)
     return jsonify(result)
 
 
 @app.route('/api/system/reboot', methods=['POST'])
 def api_reboot_system():
     """Reboot the Raspberry Pi system"""
-    result = run_script("reboot-system.sh")
+    result = run_script("reboot-system.sh", use_sudo=True)
     return jsonify(result)
 
 
