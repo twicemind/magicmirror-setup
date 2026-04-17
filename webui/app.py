@@ -295,13 +295,9 @@ def api_save_config():
             if result.returncode == 0:
                 logger.info("Container restarted successfully")
                 
-                # Also restart WebUI to reload any cached data
-                logger.info("Restarting WebUI service...")
-                subprocess.run(
-                    ["sudo", "systemctl", "restart", "mm-webui.service"],
-                    capture_output=True,
-                    timeout=10
-                )
+                # Note: We don't restart the WebUI service here because it would
+                # kill the current request before the response is sent.
+                # The frontend will reload the page after 8 seconds anyway.
                 
                 return jsonify({
                     "success": True,
