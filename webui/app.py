@@ -164,6 +164,36 @@ def api_status():
     return jsonify(get_system_status())
 
 
+@app.route('/api/services-status')
+def api_services_status():
+    """Get systemd services and timers status"""
+    script_path = os.path.join(SCRIPTS_DIR, "get-services-status.sh")
+    
+    if not os.path.exists(script_path):
+        return jsonify({"success": False, "message": "Script not found"})
+    
+    try:
+        result = subprocess.run(
+            ["bash", script_path],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        
+        if result.returncode == 0:
+            import json
+            services_data = json.loads(result.stdout)
+            return jsonify({"success": True, **services_data})
+        else:
+            return jsonify({"success": False, "message": "Failed to get services status"})
+    except json.JSONDecodeError as e:
+        logger.error(f"JSON decode error: {e}")
+        return jsonify({"success": False, "message": "Invalid JSON response"})
+    except Exception as e:
+        logger.error(f"Error getting services status: {e}")
+        return jsonify({"success": False, "message": str(e)})
+
+
 @app.route('/api/modules')
 def api_modules():
     """Get installed modules"""
