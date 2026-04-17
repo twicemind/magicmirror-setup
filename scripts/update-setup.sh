@@ -11,14 +11,16 @@ REPO_URL="https://github.com/twicemind/magicmirror-setup.git"
 BACKUP_DIR="/opt/magicmirror-setup-backup-$(date +%Y%m%d_%H%M%S)"
 
 log() {
-    local msg="[$(date +'%Y-%m-%d %H:%M:%S')] $1"
+    local msg
+    msg="[$(date +'%Y-%m-%d %H:%M:%S')] $1"
     echo "$msg"
     # Try to write to log file, but don't fail if not possible
     echo "$msg" >> "$LOG_FILE" 2>/dev/null || true
 }
 
 log_error() {
-    local msg="[$(date +'%Y-%m-%d %H:%M:%S')] ERROR: $1"
+    local msg
+    msg="[$(date +'%Y-%m-%d %H:%M:%S')] ERROR: $1"
     echo "$msg"
     echo "$msg" >> "$LOG_FILE" 2>/dev/null || true
 }
