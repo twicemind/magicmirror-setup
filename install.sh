@@ -382,6 +382,15 @@ install_initial_modules() {
     log "Installing initial modules..."
     echo "   Checking for modules to install..."
     
+    # Count existing modules in container
+    local existing_modules=0
+    if [ -d "/opt/mm/mounts/modules" ]; then
+        existing_modules=$(find /opt/mm/mounts/modules -maxdepth 1 -type d -name "MMM-*" 2>/dev/null | wc -l)
+        if [ "$existing_modules" -gt 0 ]; then
+            echo "   📦 Found $existing_modules existing module(s) in /opt/mm/mounts/modules"
+        fi
+    fi
+    
     if [ -d "$INSTALL_DIR/initial-modules" ] && [ "$(ls -A $INSTALL_DIR/initial-modules 2>/dev/null)" ]; then
         # Check if MM container is running
         if ! docker ps --format '{{.Names}}' 2>/dev/null | grep -q "^mm$"; then
@@ -410,8 +419,11 @@ install_initial_modules() {
         
         if [ $found_modules -eq 0 ]; then
             log "No module installation scripts found (only .example.sh files)"
-            echo "   ℹ️  No modules to install (only example scripts found)"
-            echo "   💡 Tip: Copy and customize .example.sh files to install modules"
+            echo "   ℹ️  No new modules to install from initial-modules directory"
+            if [ "$existing_modules" -gt 0 ]; then
+                echo "   ✅ Your $existing_modules existing module(s) remain installed"
+            fi
+            echo "   💡 Tip: Copy and customize .example.sh files to auto-install more modules"
             return 0
         fi
         
