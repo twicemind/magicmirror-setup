@@ -33,7 +33,7 @@ fi
 
 # Remove module directory
 log "Removing module directory..."
-rm -rf "$MODULES_DIR/$MODULE_NAME"
+rm -rf "${MODULES_DIR:?}/${MODULE_NAME:?}"
 
 log "Module $MODULE_NAME removed successfully"
 log "Remember to remove the module from your config.json and restart MagicMirror"
