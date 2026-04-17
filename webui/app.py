@@ -227,16 +227,64 @@ def api_update_modules():
 
 @app.route('/api/updates/os', methods=['POST'])
 def api_update_os():
-    """Trigger OS update"""
-    result = run_script("update-os.sh", use_sudo=True)
-    return jsonify(result)
+    """Trigger OS update (runs asynchronously)"""
+    script_path = os.path.join(SCRIPTS_DIR, "update-os.sh")
+    
+    if not os.path.exists(script_path):
+        return jsonify({"success": False, "message": "Script not found"})
+    
+    try:
+        cmd = ["sudo", "bash", script_path]
+        logger.info(f"Running OS update command (async): {' '.join(cmd)}")
+        
+        subprocess.Popen(
+            cmd,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True
+        )
+        
+        logger.info("OS update script started in background")
+        
+        return jsonify({
+            "success": True,
+            "message": "OS update started. This may take several minutes. System may reboot if kernel updates are installed.",
+            "async": True
+        })
+    except Exception as e:
+        logger.error(f"Error starting OS update: {e}", exc_info=True)
+        return jsonify({"success": False, "message": str(e)})
 
 
 @app.route('/api/updates/docker', methods=['POST'])
 def api_update_docker():
-    """Trigger Docker update"""
-    result = run_script("update-docker.sh", use_sudo=True)
-    return jsonify(result)
+    """Trigger Docker update (runs asynchronously)"""
+    script_path = os.path.join(SCRIPTS_DIR, "update-docker.sh")
+    
+    if not os.path.exists(script_path):
+        return jsonify({"success": False, "message": "Script not found"})
+    
+    try:
+        cmd = ["sudo", "bash", script_path]
+        logger.info(f"Running Docker update command (async): {' '.join(cmd)}")
+        
+        subprocess.Popen(
+            cmd,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True
+        )
+        
+        logger.info("Docker update script started in background")
+        
+        return jsonify({
+            "success": True,
+            "message": "Docker update started. Container will restart automatically if updates are available.",
+            "async": True
+        })
+    except Exception as e:
+        logger.error(f"Error starting Docker update: {e}", exc_info=True)
+        return jsonify({"success": False, "message": str(e)})
 
 
 @app.route('/api/container/restart', methods=['POST'])
