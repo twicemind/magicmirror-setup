@@ -99,7 +99,7 @@ systemctl stop mm-webui.service || true
 
 # Preserve configuration and data
 log "Preserving custom configurations..."
-if [ -f "$INSTALL_DIR/webui/venv" ]; then
+if [ -d "$INSTALL_DIR/webui/venv" ]; then
     mv "$INSTALL_DIR/webui/venv" "$TEMP_DIR/webui/" 2>/dev/null || true
 fi
 
@@ -122,6 +122,10 @@ source venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 deactivate
+
+# Ensure correct ownership
+log "Setting ownership..."
+chown -R mm:mm "$INSTALL_DIR"
 
 # Reload systemd (in case service files changed)
 log "Reloading systemd..."
