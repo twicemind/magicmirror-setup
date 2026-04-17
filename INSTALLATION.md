@@ -114,26 +114,31 @@ Beim ersten Login:
 
 ### Schritt 3.3: MagicMirror vorbereiten
 
-Nach dem Login führen Sie aus:
+**Wichtig:** MagicMirrorOS liefert bereits MagicMirror in `/opt/mm` mit. Nach dem ersten Boot müssen Sie nur noch den Docker-Container starten:
 
 ```bash
+# Optional: MagicMirror mit Electron (Vollbild-Modus) installieren
 cd /opt/mm/install/
 sudo bash install.sh electron
 ```
 
 **⏱️ Dieser Vorgang dauert ca. 5-10 Minuten**
 
-Dies installiert:
-- MagicMirror Docker-Container
-- Electron für die Anzeige
-- Notwendige Abhängigkeiten
+Nach Abschluss starten Sie den MagicMirror-Container:
 
-Nach Abschluss sollte der MagicMirror-Container laufen:
+```bash
+cd /opt/mm
+docker compose up -d
+```
+
+Verifizieren Sie, dass der Container läuft:
 
 ```bash
 docker ps
 # Sie sollten einen Container namens "mm" sehen
 ```
+
+**Hinweis:** Das MagicMirror Setup (nächster Schritt) kann auch installiert werden, BEVOR der MagicMirror-Container läuft. Modul-Installationen funktionieren aber erst nach dem Start des Containers.
 
 ---
 

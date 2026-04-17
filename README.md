@@ -23,10 +23,16 @@ Dieses Projekt bietet eine vollständige Automatisierung für die Installation u
 ## 📋 Voraussetzungen
 
 - Raspberry Pi (3 oder neuer empfohlen)
-- MagicMirrorOS (Raspberry OS 64Bit light) geflasht auf MicroSD
-- Docker und MagicMirror bereits über `/opt/mm/install/install.sh electron` installiert
+- **MagicMirrorOS** (Debian-basiertes OS mit vorinstalliertem MagicMirror in `/opt/mm`)
+- MagicMirror-Container mit `docker compose up -d` gestartet (optional für erste Installation)
 - SSH-Zugang aktiviert
 - WLAN konfiguriert
+
+**Hinweis:** MagicMirrorOS liefert MagicMirror bereits mit Docker Compose aus. Dieses Setup ergänzt die Installation um:
+- Automatische Updates (OS, Docker, Setup, Module)
+- WebUI zur Verwaltung
+- Systemd-Timer für regelmäßige Wartung
+- Logging und Monitoring
 
 ## 🚀 Quick Start
 

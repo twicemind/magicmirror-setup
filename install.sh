@@ -247,15 +247,21 @@ setup_initial_config() {
     fi
     
     # Install initial modules
-    if [ -d "$INSTALL_DIR/initial-modules" ] && [ "$(ls -A $INSTALL_DIR/initial-modules)" ]; then
-        log "Installing initial modules..."
-        for module_file in "$INSTALL_DIR/initial-modules"/*.sh; do
-            # Skip example files
-            if [ -f "$module_file" ] && [[ ! "$module_file" =~ \.example\.sh$ ]]; then
-                log "Running $(basename "$module_file")..."
-                bash "$module_file" || log_warning "Module installation script failed (this is OK if MM container isn't running yet)"
-            fi
-        done
+    if [ -d "$INSTALL_DIR/initial-modules" ] && [ "$(ls -A $INSTALL_DIR/initial-modules 2>/dev/null)" ]; then
+        # Check if MM container is running
+        if docker ps --format '{{.Names}}' 2>/dev/null | grep -q "^mm$"; then
+            log "Installing initial modules..."
+            for module_file in "$INSTALL_DIR/initial-modules"/*.sh; do
+                # Skip example files
+                if [ -f "$module_file" ] && [[ ! "$module_file" =~ \.example\.sh$ ]]; then
+                    log "Running $(basename "$module_file")..."
+                    bash "$module_file" || log_warning "Module installation script failed"
+                fi
+            done
+        else
+            log_warning "MagicMirror container 'mm' is not running. Skipping module installations."
+            log_info "To install modules later, start the container with: cd /opt/mm && docker compose up -d"
+        fi
     fi
 }
 
@@ -303,6 +309,22 @@ show_summary() {
     echo "   systemctl status mm-webui.service   - Check WebUI status"
     echo "   systemctl list-timers               - View scheduled updates"
     echo "   docker exec -it mm bash             - Enter MagicMirror container"
+    echo ""
+    
+    # Check if MagicMirror container is running
+    if docker ps --format '{{.Names}}' 2>/dev/null | grep -q "^mm$"; then
+        echo "✅ MagicMirror container is running"
+    else
+        echo "⚠️  MagicMirror container is NOT running"
+        echo ""
+        echo "To start MagicMirror:"
+        echo "   cd /opt/mm"
+        echo "   docker compose up -d"
+        echo ""
+        echo "MagicMirrorOS has MagicMirror pre-installed in /opt/mm."
+        echo "Start the container to use all features of this setup."
+    fi
+    
     echo ""
     echo "📖 For more information, see: $INSTALL_DIR/README.md"
     echo ""
