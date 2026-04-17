@@ -380,44 +380,64 @@ setup_initial_config() {
 # Install initial modules (must be called after container is running)
 install_initial_modules() {
     log "Installing initial modules..."
+    echo "   Checking for modules to install..."
     
     if [ -d "$INSTALL_DIR/initial-modules" ] && [ "$(ls -A $INSTALL_DIR/initial-modules 2>/dev/null)" ]; then
         # Check if MM container is running
         if ! docker ps --format '{{.Names}}' 2>/dev/null | grep -q "^mm$"; then
             log_error "MagicMirror container 'mm' is not running. Cannot install modules."
+            echo "   ❌ Container not running"
             return 1
         fi
         
         local installed_count=0
+        local found_modules=0
         for module_file in "$INSTALL_DIR/initial-modules"/*.sh; do
             # Skip example files
             if [ -f "$module_file" ] && [[ ! "$module_file" =~ \.example\.sh$ ]]; then
+                ((found_modules++))
                 log "Running $(basename "$module_file")..."
+                echo "   📦 Installing $(basename "$module_file")..."
                 if bash "$module_file"; then
                     ((installed_count++))
+                    echo "      ✅ Installed successfully"
                 else
                     log_warning "Module installation script failed: $(basename "$module_file")"
+                    echo "      ⚠️  Installation failed"
                 fi
             fi
         done
         
+        if [ $found_modules -eq 0 ]; then
+            log "No module installation scripts found (only .example.sh files)"
+            echo "   ℹ️  No modules to install (only example scripts found)"
+            echo "   💡 Tip: Copy and customize .example.sh files to install modules"
+            return 0
+        fi
+        
         if [ $installed_count -gt 0 ]; then
             log "Successfully installed $installed_count module(s)"
+            echo "   ✅ Successfully installed $installed_count module(s)"
             
             # Restart container to load new modules
             log "Restarting MagicMirror container to load new modules..."
+            echo "   🔄 Restarting container to load new modules..."
             if docker restart mm 2>&1 | tee -a "$LOG_FILE"; then
                 log "Container restarted successfully"
+                echo "   ✅ Container restarted"
                 # Wait for container to be ready
                 sleep 5
             else
                 log_warning "Failed to restart container, please restart manually"
+                echo "   ⚠️  Failed to restart container"
             fi
         else
             log "No modules were installed"
+            echo "   ⚠️  No modules were successfully installed"
         fi
     else
         log "No initial modules found to install"
+        echo "   ℹ️  No initial-modules directory or it's empty"
     fi
 }
 
