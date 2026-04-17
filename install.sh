@@ -18,26 +18,67 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-# Ensure git is installed for cloning
+# Ensure required tools are installed
 if ! command -v git &> /dev/null; then
     echo "Installing git..."
     apt-get update
-    apt-get install -y git
+    apt-get install -y git curl
+elif ! command -v curl &> /dev/null; then
+    echo "Installing curl..."
+    apt-get update
+    apt-get install -y curl
 fi
 
-# Determine script directory or clone from GitHub
+# Determine script directory or download from GitHub
 if [ -z "$BASH_SOURCE" ] || [ "$BASH_SOURCE" = "bash" ] || [ "$BASH_SOURCE" = "/dev/stdin" ]; then
     # Script is being piped from curl, need to download files
-    GITHUB_REPO="https://github.com/twicemind/magicmirror-setup.git"
+    GITHUB_REPO="twicemind/magicmirror-setup"
+    GITHUB_API="https://api.github.com/repos/$GITHUB_REPO/releases/latest"
     TEMP_DIR="/tmp/magicmirror-setup-install"
     
-    echo "Downloading MagicMirror Setup from GitHub..."
+    echo "========================================="
+    echo "Downloading MagicMirror Setup..."
+    echo "========================================="
+    
     rm -rf "$TEMP_DIR"
-    git clone --depth 1 "$GITHUB_REPO" "$TEMP_DIR" || {
-        echo "ERROR: Failed to clone repository"
-        exit 1
-    }
-    SCRIPT_DIR="$TEMP_DIR"
+    mkdir -p "$TEMP_DIR"
+    
+    # Try to get latest release
+    echo "Checking for latest release..."
+    if RELEASE_DATA=$(curl -s "$GITHUB_API" 2>/dev/null) && echo "$RELEASE_DATA" | grep -q "tag_name"; then
+        RELEASE_TAG=$(echo "$RELEASE_DATA" | grep '"tag_name":' | sed -E 's/.*"tag_name": "([^"]+)".*/\1/')
+        RELEASE_URL=$(echo "$RELEASE_DATA" | grep '"browser_download_url":.*\.tar\.gz"' | sed -E 's/.*"browser_download_url": "([^"]+)".*/\1/')
+        
+        if [ -n "$RELEASE_URL" ]; then
+            echo "Downloading release $RELEASE_TAG..."
+            if curl -L -o "$TEMP_DIR/release.tar.gz" "$RELEASE_URL" 2>/dev/null; then
+                echo "Extracting release archive..."
+                tar -xzf "$TEMP_DIR/release.tar.gz" -C "$TEMP_DIR" --strip-components=1 2>/dev/null || {
+                    # Fallback: try without strip-components
+                    tar -xzf "$TEMP_DIR/release.tar.gz" -C "$TEMP_DIR" 2>/dev/null
+                }
+                rm -f "$TEMP_DIR/release.tar.gz"
+                SCRIPT_DIR="$TEMP_DIR"
+                echo "✓ Using release $RELEASE_TAG"
+            else
+                echo "Failed to download release, falling back to git clone..."
+                RELEASE_URL=""
+            fi
+        fi
+    fi
+    
+    # Fallback to git clone if release download failed
+    if [ -z "$RELEASE_URL" ] || [ ! -d "$SCRIPT_DIR" ]; then
+        echo "Cloning repository (fallback)..."
+        git clone --depth 1 "https://github.com/$GITHUB_REPO.git" "$TEMP_DIR" || {
+            echo "ERROR: Failed to download MagicMirror Setup"
+            exit 1
+        }
+        SCRIPT_DIR="$TEMP_DIR"
+        echo "✓ Using latest main branch"
+    fi
+    
+    echo "========================================="
 else
     # Script is running locally
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
