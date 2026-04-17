@@ -95,6 +95,17 @@
                         </button>
                     </div>
                 </div>
+                
+                <!-- System Control -->
+                <div class="card">
+                    <h2>💻 <span data-i18n="dashboard.system_control">System-Steuerung</span></h2>
+                    <p style="color: #666; margin-bottom: 20px;" data-i18n="dashboard.system_control_desc">Raspberry Pi neu starten</p>
+                    <div class="button-group">
+                        <button class="button button-danger" onclick="rebootSystem()">
+                            <span class="button-text" data-i18n="dashboard.reboot_system">System neu starten</span>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -381,6 +392,40 @@
             setTimeout(loadStatus, 2000);
         } else {
             showNotification('Restart failed: ' + data.message, 'error');
+        }
+    }
+    
+    // Reboot system
+    async function rebootSystem() {
+        const message = currentLang === 'de' 
+            ? 'Raspberry Pi wirklich neu starten?\n\nDas System wird für etwa 30-60 Sekunden nicht erreichbar sein.'
+            : 'Really reboot Raspberry Pi?\n\nThe system will be unavailable for about 30-60 seconds.';
+        
+        if (!confirm(message)) return;
+        
+        const rebootingMsg = currentLang === 'de' 
+            ? 'System wird neu gestartet... Bitte warten Sie ca. 60 Sekunden und laden Sie dann die Seite neu.'
+            : 'System is rebooting... Please wait about 60 seconds and then reload the page.';
+        
+        showNotification(rebootingMsg, 'info');
+        
+        const data = await apiCall('/api/system/reboot', {
+            method: 'POST'
+        });
+        
+        if (data.success) {
+            const successMsg = currentLang === 'de'
+                ? 'Neustart eingeleitet. Seite lädt in 60 Sekunden neu...'
+                : 'Reboot initiated. Page will reload in 60 seconds...';
+            
+            showNotification(successMsg, 'success');
+            
+            // Reload page after 60 seconds
+            setTimeout(() => {
+                window.location.reload();
+            }, 60000);
+        } else {
+            showNotification('Reboot failed: ' + data.message, 'error');
         }
     }
     

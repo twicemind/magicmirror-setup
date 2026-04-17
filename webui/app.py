@@ -214,6 +214,13 @@ def api_restart_container():
     return jsonify(result)
 
 
+@app.route('/api/system/reboot', methods=['POST'])
+def api_reboot_system():
+    """Reboot the Raspberry Pi system"""
+    result = run_script("reboot-system.sh")
+    return jsonify(result)
+
+
 @app.route('/api/config', methods=['GET'])
 def api_get_config():
     """Get MagicMirror configuration"""

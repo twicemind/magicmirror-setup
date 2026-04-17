@@ -58,9 +58,29 @@ if [ "$NEW_IMAGE_ID" != "$CURRENT_IMAGE_ID" ]; then
     # Recreate container (using docker compose or original run command)
     # This assumes MagicMirrorOS uses docker-compose
     if [ -f "/opt/mm/run/docker-compose.yml" ] || [ -f "/opt/mm/run/compose.yaml" ]; then
-        log "Recreating container with docker-compose..."
+        log "Recreating container with docker compose..."
         cd /opt/mm/run || exit 1
-        docker-compose up -d
+        
+        # Try docker compose (new syntax) first, fallback to docker-compose (old syntax)
+        if command -v docker &> /dev/null && docker compose version &> /dev/null; then
+            docker compose up -d
+        elif command -v docker-compose &> /dev/null; then
+            docker-compose up -d
+        else
+            log_error "Neither 'docker compose' nor 'docker-compose' command found"
+            exit 1
+        fi
+        
+        # Wait a moment for container to start
+        sleep 3
+        
+        # Verify container is running
+        if docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
+            log "Container is now running"
+        else
+            log_error "Container failed to start. Check docker logs with: docker logs $CONTAINER_NAME"
+            exit 1
+        fi
     else
         log_error "docker-compose.yml not found in /opt/mm/run. Container needs manual recreation."
         exit 1
