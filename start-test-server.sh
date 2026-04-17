@@ -3,7 +3,7 @@
 # Start Test Server Script
 # Starts the test app in the background with proper logging
 
-cd "$(dirname "$0")/webui"
+cd "$(dirname "$0")/webui" || exit 1
 
 # Kill existing instances
 pkill -f "python.*test_app.py" 2>/dev/null
@@ -13,6 +13,7 @@ mkdir -p logs
 
 # Start server in background
 echo "Starting MagicMirror Setup Test Server..."
+# shellcheck disable=SC1091
 source venv/bin/activate
 nohup python test_app.py > logs/test_app.log 2>&1 &
 

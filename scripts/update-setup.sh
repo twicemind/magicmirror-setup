@@ -93,10 +93,11 @@ chmod +x "$INSTALL_DIR/scripts/"*.sh 2>/dev/null || true
 
 # Reinstall Python dependencies
 log "Updating Python dependencies..."
-cd "$INSTALL_DIR/webui"
+cd "$INSTALL_DIR/webui" || exit 1
 if [ ! -d "venv" ]; then
     python3 -m venv venv
 fi
+# shellcheck disable=SC1091
 source venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt

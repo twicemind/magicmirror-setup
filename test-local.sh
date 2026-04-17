@@ -37,11 +37,12 @@ echo ""
 # Prüfe ob venv existiert
 if [ ! -d "webui/venv" ]; then
     echo "📦 Installiere Python-Abhängigkeiten..."
-    cd webui
+    cd webui || exit 1
     python3 -m venv venv
+    # shellcheck disable=SC1091
     source venv/bin/activate
     pip install -r requirements.txt
-    cd ..
+    cd .. || exit 1
     echo "✅ Abhängigkeiten installiert"
     echo ""
 fi
@@ -54,6 +55,7 @@ echo ""
 echo "Drücken Sie Ctrl+C zum Beenden"
 echo ""
 
-cd webui
+cd webui || exit 1
+# shellcheck disable=SC1091
 source venv/bin/activate
 python test_app.py
