@@ -221,12 +221,62 @@ initial_update() {
     log "Initial system update completed"
 }
 
-# Copy files to installation directory
+# Setup installation directory with git repository
 install_files() {
-    log "Installing files to $INSTALL_DIR..."
+    log "Setting up installation directory: $INSTALL_DIR..."
     
-    mkdir -p "$INSTALL_DIR"
-    cp -r "$SCRIPT_DIR"/* "$INSTALL_DIR/"
+    local REPO_URL="https://github.com/twicemind/magicmirror-setup.git"
+    
+    # Configure git safe.directory for this repo
+    git config --global --add safe.directory "$INSTALL_DIR" 2>/dev/null || true
+    
+    if [ -d "$INSTALL_DIR/.git" ]; then
+        # Already a git repository, just pull latest changes
+        log "Git repository exists, pulling latest changes..."
+        cd "$INSTALL_DIR" || exit 1
+        
+        # Stash any local changes
+        git stash || true
+        
+        # Pull latest changes
+        if git pull origin main; then
+            log "Successfully updated to latest version"
+        else
+            log_warning "Git pull failed, but continuing..."
+        fi
+        
+        cd - > /dev/null || exit 1
+        
+    elif [ -d "$INSTALL_DIR" ] && [ "$(ls -A $INSTALL_DIR)" ]; then
+        # Directory exists but is not a git repo - backup and clone
+        log_warning "Directory exists but is not a git repository"
+        local BACKUP_DIR="/opt/magicmirror-setup-backup-$(date +%Y%m%d_%H%M%S)"
+        log "Creating backup: $BACKUP_DIR"
+        mv "$INSTALL_DIR" "$BACKUP_DIR"
+        
+        log "Cloning repository to $INSTALL_DIR..."
+        if git clone "$REPO_URL" "$INSTALL_DIR"; then
+            log "Repository cloned successfully"
+        else
+            log_error "Failed to clone repository, restoring backup"
+            mv "$BACKUP_DIR" "$INSTALL_DIR"
+            exit 1
+        fi
+        
+    else
+        # Directory doesn't exist or is empty - clone directly
+        log "Cloning repository to $INSTALL_DIR..."
+        mkdir -p "$(dirname "$INSTALL_DIR")"
+        if git clone "$REPO_URL" "$INSTALL_DIR"; then
+            log "Repository cloned successfully"
+        else
+            log_error "Failed to clone repository"
+            exit 1
+        fi
+    fi
+    
+    # Make scripts executable
+    chmod +x "$INSTALL_DIR/install.sh" 2>/dev/null || true
     chmod +x "$INSTALL_DIR"/scripts/*.sh 2>/dev/null || true
     
     # Fix permissions for WebUI service (runs as user 'mm')
@@ -234,7 +284,7 @@ install_files() {
     chmod -R 755 "$INSTALL_DIR/webui" 2>/dev/null || true
     chown -R mm:mm "$INSTALL_DIR" 2>/dev/null || true
     
-    log "Files installed"
+    log "Installation directory ready"
 }
 
 # Install systemd services
