@@ -580,6 +580,39 @@ def api_update_wlan():
         return jsonify({"success": False, "message": str(e)})
 
 
+@app.route('/api/wlan/install', methods=['POST'])
+def api_install_wlan():
+    """Install the WLAN manager (runs asynchronously)"""
+    script_path = os.path.join(os.path.dirname(SCRIPTS_DIR), "initial-modules", "install-magicmirror-wlan.sh")
+    
+    if not os.path.exists(script_path):
+        logger.error(f"Installation script not found: {script_path}")
+        return jsonify({"success": False, "message": "Installation script not found"})
+    
+    try:
+        cmd = ["sudo", "bash", script_path]
+        logger.info(f"Running WLAN installation command (async): {' '.join(cmd)}")
+        
+        # Start the installation script asynchronously
+        subprocess.Popen(
+            cmd,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True
+        )
+        
+        logger.info("WLAN installation script started in background")
+        
+        return jsonify({
+            "success": True,
+            "message": "WLAN Manager installation started. This may take 2-3 minutes. Services will start automatically when done.",
+            "async": True
+        })
+    except Exception as e:
+        logger.error(f"Error starting WLAN installation: {e}", exc_info=True)
+        return jsonify({"success": False, "message": str(e)})
+
+
 @app.route('/api/update-settings', methods=['GET'])
 def api_get_update_settings():
     """Get current update settings"""

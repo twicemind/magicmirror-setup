@@ -76,6 +76,9 @@
                         <button class="button" onclick="checkWlanUpdate()">
                             <span class="button-text" data-i18n="dashboard.check_updates">Nach Updates suchen</span>
                         </button>
+                        <button class="button button-success" id="install-wlan-btn" onclick="installWlan()" style="display: none;">
+                            <span class="button-text" data-i18n="dashboard.install_wlan">WLAN Manager installieren</span>
+                        </button>
                         <button class="button" id="update-wlan-btn" onclick="updateWlan()" style="display: none;">
                             <span class="button-text" data-i18n="dashboard.update_wlan">WLAN Manager aktualisieren</span>
                         </button>
@@ -739,6 +742,7 @@
     async function checkWlanUpdate() {
         const statusDiv = document.getElementById('wlan-update-status');
         const updateBtn = document.getElementById('update-wlan-btn');
+        const installBtn = document.getElementById('install-wlan-btn');
         
         statusDiv.innerHTML = '<p style="color: #666;">Checking for updates...</p>';
         
@@ -747,21 +751,25 @@
         if (data.success) {
             if (!data.installed) {
                 statusDiv.innerHTML = `
-                    <div style="padding: 15px; background: #fee2e2; border-left: 4px solid #ef4444; border-radius: 4px;">
-                        <p style="margin: 0; color: #991b1b; font-weight: 600;">
+                    <div style="padding: 15px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
+                        <p style="margin: 0; color: #92400e; font-weight: 600;">
                             ℹ️ Not installed
                         </p>
-                        <p style="margin: 5px 0 0 0; color: #991b1b; font-size: 14px;">
-                            WLAN Manager is not installed
+                        <p style="margin: 5px 0 0 0; color: #92400e; font-size: 14px;">
+                            WLAN Manager is not installed yet
                         </p>
                     </div>
                 `;
-                updateBtn.style.display = 'none';
+                if (updateBtn) updateBtn.style.display = 'none';
+                if (installBtn) installBtn.style.display = 'inline-block';
                 return;
             }
             
             const current = data.current_version;
             const latest = data.latest_version;
+            
+            if (updateBtn) updateBtn.style.display = 'none';
+            if (installBtn) installBtn.style.display = 'none';
             
             if (data.update_available) {
                 statusDiv.innerHTML = `
@@ -774,7 +782,7 @@
                         </p>
                     </div>
                 `;
-                updateBtn.style.display = 'inline-block';
+                if (updateBtn) updateBtn.style.display = 'inline-block';
             } else {
                 statusDiv.innerHTML = `
                     <div style="padding: 15px; background: #d1fae5; border-left: 4px solid #10b981; border-radius: 4px;">
@@ -786,7 +794,6 @@
                         </p>
                     </div>
                 `;
-                updateBtn.style.display = 'none';
             }
         } else {
             statusDiv.innerHTML = `
@@ -794,6 +801,42 @@
                     ❌ Failed to check for updates
                 </p>
             `;
+        }
+    }
+    
+    // Install WLAN manager
+    async function installWlan() {
+        if (!confirm('Install WLAN Manager? This will take 2-3 minutes and requires an internet connection.')) return;
+        
+        const button = event.target.closest('button');
+        const originalText = button.querySelector('.button-text').textContent;
+        button.disabled = true;
+        button.querySelector('.button-text').innerHTML = '<span class="loading"></span> Installing...';
+        
+        showNotification('Installing WLAN Manager... This may take 2-3 minutes.', 'info');
+        
+        try {
+            const data = await apiCall('/api/wlan/install', {
+                method: 'POST'
+            });
+            
+            if (data.success) {
+                showNotification('WLAN Manager installation started! Services will start automatically when done.', 'success');
+                // Re-check status after installation
+                setTimeout(() => {
+                    checkWlanUpdate();
+                    button.disabled = false;
+                    button.querySelector('.button-text').textContent = originalText;
+                }, 180000); // Wait 3 minutes for installation to complete
+            } else {
+                showNotification('Installation failed: ' + data.message, 'error');
+                button.disabled = false;
+                button.querySelector('.button-text').textContent = originalText;
+            }
+        } catch (e) {
+            showNotification('Error: ' + e.message, 'error');
+            button.disabled = false;
+            button.querySelector('.button-text').textContent = originalText;
         }
     }
     
