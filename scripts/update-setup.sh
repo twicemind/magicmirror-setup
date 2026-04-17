@@ -147,7 +147,11 @@ log "Scheduling WebUI restart in 3 seconds..."
         log "WebUI service restarted successfully"
     else
         log "WebUI restart failed, trying start..."
-        systemctl start mm-webui.service && log "WebUI service started" || log "ERROR: WebUI service failed to start"
+        if systemctl start mm-webui.service; then
+            log "WebUI service started"
+        else
+            log "ERROR: WebUI service failed to start"
+        fi
     fi
 ) >> "$LOG_FILE" 2>&1 &
 
