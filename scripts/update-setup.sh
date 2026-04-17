@@ -107,24 +107,26 @@ fi
 log "Installing new version..."
 rsync -av --exclude='.git' --exclude='test' "$TEMP_DIR/" "$INSTALL_DIR/"
 
+# Set ownership immediately after rsync (files are created as root)
+log "Setting ownership after file copy..."
+chown -R mm:mm "$INSTALL_DIR"
+
 # Make scripts executable
 chmod +x "$INSTALL_DIR/install.sh"
 chmod +x "$INSTALL_DIR/scripts/"*.sh 2>/dev/null || true
 
-# Reinstall Python dependencies
+# Reinstall Python dependencies as user mm
 log "Updating Python dependencies..."
 cd "$INSTALL_DIR/webui" || exit 1
 if [ ! -d "venv" ]; then
-    python3 -m venv venv
+    # Create venv as user mm
+    su - mm -c "cd $INSTALL_DIR/webui && python3 -m venv venv"
 fi
-# shellcheck disable=SC1091
-source venv/bin/activate
-pip install --upgrade pip
-pip install -r requirements.txt
-deactivate
+# Install packages as user mm
+su - mm -c "cd $INSTALL_DIR/webui && source venv/bin/activate && pip install --upgrade pip && pip install -r requirements.txt"
 
-# Ensure correct ownership
-log "Setting ownership..."
+# Ensure ownership one final time
+log "Ensuring final ownership..."
 chown -R mm:mm "$INSTALL_DIR"
 
 # Reload systemd (in case service files changed)
