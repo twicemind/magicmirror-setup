@@ -526,6 +526,60 @@ def api_update_setup():
         return jsonify({"success": False, "message": str(e)})
 
 
+@app.route('/api/wlan/check-update')
+def api_check_wlan_update():
+    """Check for WLAN manager updates"""
+    try:
+        result = subprocess.run(
+            ["bash", os.path.join(SCRIPTS_DIR, "check-wlan-update.sh")],
+            capture_output=True,
+            text=True,
+            timeout=30
+        )
+        
+        if result.returncode == 0:
+            update_info = json.loads(result.stdout)
+            return jsonify({"success": True, **update_info})
+        else:
+            return jsonify({"success": False, "message": "Failed to check for updates"})
+    except Exception as e:
+        logger.error(f"Error checking WLAN updates: {e}")
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+@app.route('/api/wlan/update', methods=['POST'])
+def api_update_wlan():
+    """Update the WLAN manager (runs asynchronously)"""
+    script_path = os.path.join(SCRIPTS_DIR, "update-wlan.sh")
+    
+    if not os.path.exists(script_path):
+        logger.error(f"Script not found: {script_path}")
+        return jsonify({"success": False, "message": "Script not found"})
+    
+    try:
+        cmd = ["sudo", "bash", script_path]
+        logger.info(f"Running WLAN update command (async): {' '.join(cmd)}")
+        
+        # Start the update script asynchronously
+        subprocess.Popen(
+            cmd,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True
+        )
+        
+        logger.info("WLAN update script started in background")
+        
+        return jsonify({
+            "success": True,
+            "message": "WLAN Manager update started. Services will restart automatically when done.",
+            "async": True
+        })
+    except Exception as e:
+        logger.error(f"Error starting WLAN update: {e}", exc_info=True)
+        return jsonify({"success": False, "message": str(e)})
+
+
 @app.route('/api/update-settings', methods=['GET'])
 def api_get_update_settings():
     """Get current update settings"""

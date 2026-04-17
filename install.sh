@@ -279,6 +279,7 @@ install_files() {
     # Make scripts executable
     chmod +x "$INSTALL_DIR/install.sh" 2>/dev/null || true
     chmod +x "$INSTALL_DIR"/scripts/*.sh 2>/dev/null || true
+    chmod +x "$INSTALL_DIR"/initial-modules/*.sh 2>/dev/null || true
     
     # Fix permissions for WebUI service (runs as user 'mm')
     chmod 755 "$INSTALL_DIR"
@@ -678,6 +679,11 @@ main() {
     setup_webui
     setup_initial_config
     setup_splash_screen
+    
+    # Fix permissions after all setup operations
+    # This ensures all files created during setup are owned by mm:mm
+    log "Finalizing permissions..."
+    chown -R mm:mm "$INSTALL_DIR" 2>/dev/null || true
     
     show_summary
     

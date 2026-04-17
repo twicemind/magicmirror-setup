@@ -65,6 +65,26 @@
                     </p>
                 </div>
                 
+                <!-- WLAN Manager Update -->
+                <div class="card">
+                    <h2>📡 <span data-i18n="dashboard.wlan_update">WLAN Manager Update</span></h2>
+                    <p style="color: #666; margin-bottom: 20px;" data-i18n="dashboard.wlan_update_desc">WiFi Management System aktualisieren</p>
+                    <div id="wlan-update-status" style="margin-bottom: 15px;">
+                        <p style="color: #666;" data-i18n="dashboard.checking_updates">Prüfe Updates...</p>
+                    </div>
+                    <div class="button-group">
+                        <button class="button" onclick="checkWlanUpdate()">
+                            <span class="button-text" data-i18n="dashboard.check_updates">Nach Updates suchen</span>
+                        </button>
+                        <button class="button" id="update-wlan-btn" onclick="updateWlan()" style="display: none;">
+                            <span class="button-text" data-i18n="dashboard.update_wlan">WLAN Manager aktualisieren</span>
+                        </button>
+                    </div>
+                    <p style="margin-top: 20px; font-size: 14px; color: #666;">
+                        🌐 WebUI: <a href="http://localhost:8765" target="_blank" style="color: #007bff;">Port 8765</a>
+                    </p>
+                </div>
+                
                 <!-- System Updates -->
                 <div class="card">
                     <h2>📦 <span data-i18n="dashboard.system_updates">System-Updates</span></h2>
@@ -256,11 +276,14 @@
         loadConfig();
         loadLogs();
         checkSetupUpdate();
+        checkWlanUpdate();
         
         // Refresh status every 30 seconds
         setInterval(loadStatus, 30000);
         // Check for setup updates every 5 minutes
         setInterval(checkSetupUpdate, 300000);
+        // Check for WLAN manager updates every 5 minutes
+        setInterval(checkWlanUpdate, 300000);
     });
     
     // Reload dynamic content when language changes
@@ -707,6 +730,104 @@
         } catch (error) {
             showNotification('Update failed: ' + error.message, 'error');
             console.error('Update exception:', error);
+            button.disabled = false;
+            button.querySelector('.button-text').textContent = originalText;
+        }
+    }
+    
+    // Check for WLAN manager updates
+    async function checkWlanUpdate() {
+        const statusDiv = document.getElementById('wlan-update-status');
+        const updateBtn = document.getElementById('update-wlan-btn');
+        
+        statusDiv.innerHTML = '<p style="color: #666;">Checking for updates...</p>';
+        
+        const data = await apiCall('/api/wlan/check-update');
+        
+        if (data.success) {
+            if (!data.installed) {
+                statusDiv.innerHTML = `
+                    <div style="padding: 15px; background: #fee2e2; border-left: 4px solid #ef4444; border-radius: 4px;">
+                        <p style="margin: 0; color: #991b1b; font-weight: 600;">
+                            ℹ️ Not installed
+                        </p>
+                        <p style="margin: 5px 0 0 0; color: #991b1b; font-size: 14px;">
+                            WLAN Manager is not installed
+                        </p>
+                    </div>
+                `;
+                updateBtn.style.display = 'none';
+                return;
+            }
+            
+            const current = data.current_version;
+            const latest = data.latest_version;
+            
+            if (data.update_available) {
+                statusDiv.innerHTML = `
+                    <div style="padding: 15px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
+                        <p style="margin: 0; color: #92400e; font-weight: 600;">
+                            🆕 Update available!
+                        </p>
+                        <p style="margin: 5px 0 0 0; color: #92400e; font-size: 14px;">
+                            Current: ${current} → Latest: ${latest}
+                        </p>
+                    </div>
+                `;
+                updateBtn.style.display = 'inline-block';
+            } else {
+                statusDiv.innerHTML = `
+                    <div style="padding: 15px; background: #d1fae5; border-left: 4px solid #10b981; border-radius: 4px;">
+                        <p style="margin: 0; color: #065f46; font-weight: 600;">
+                            ✅ Up to date
+                        </p>
+                        <p style="margin: 5px 0 0 0; color: #065f46; font-size: 14px;">
+                            Version: ${current}
+                        </p>
+                    </div>
+                `;
+                updateBtn.style.display = 'none';
+            }
+        } else {
+            statusDiv.innerHTML = `
+                <p style="color: #ef4444;">
+                    ❌ Failed to check for updates
+                </p>
+            `;
+        }
+    }
+    
+    // Update WLAN manager
+    async function updateWlan() {
+        if (!confirm('Update WLAN Manager to the latest version? WLAN services will restart after the update.')) return;
+        
+        const button = event.target.closest('button');
+        const originalText = button.querySelector('.button-text').textContent;
+        button.disabled = true;
+        button.querySelector('.button-text').innerHTML = '<span class="loading"></span> Updating...';
+        
+        showNotification('Updating WLAN Manager... This may take a few minutes.', 'info');
+        
+        try {
+            const data = await apiCall('/api/wlan/update', {
+                method: 'POST'
+            });
+            
+            if (data.success) {
+                showNotification('WLAN Manager updated successfully!', 'success');
+                // Re-check status after update
+                setTimeout(() => {
+                    checkWlanUpdate();
+                    button.disabled = false;
+                    button.querySelector('.button-text').textContent = originalText;
+                }, 3000);
+            } else {
+                showNotification('Update failed: ' + data.message, 'error');
+                button.disabled = false;
+                button.querySelector('.button-text').textContent = originalText;
+            }
+        } catch (e) {
+            showNotification('Error: ' + e.message, 'error');
             button.disabled = false;
             button.querySelector('.button-text').textContent = originalText;
         }
