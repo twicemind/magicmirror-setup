@@ -191,7 +191,7 @@ def api_remove_module(module_name):
     return jsonify(result)
 
 
-@app.route('/api/modules/update', methods=['POST'])
+@app.route('/api/updates/modules', methods=['POST'])
 def api_update_modules():
     """Update all modules (runs asynchronously)"""
     script_path = os.path.join(SCRIPTS_DIR, "update-modules.sh")
