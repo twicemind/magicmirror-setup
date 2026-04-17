@@ -142,6 +142,10 @@ check_environment() {
         exit 1
     fi
     
+    # Add Git safe.directory to prevent ownership warnings
+    git config --global --add safe.directory /opt/mm 2>/dev/null || true
+    git config --global --add safe.directory /opt/mm/magicmirror-setup 2>/dev/null || true
+    
     log "Environment check passed"
 }
 
@@ -216,6 +220,11 @@ install_files() {
     mkdir -p "$INSTALL_DIR"
     cp -r "$SCRIPT_DIR"/* "$INSTALL_DIR/"
     chmod +x "$INSTALL_DIR"/scripts/*.sh 2>/dev/null || true
+    
+    # Fix permissions for WebUI service (runs as user 'mm')
+    chmod 755 "$INSTALL_DIR"
+    chmod -R 755 "$INSTALL_DIR/webui" 2>/dev/null || true
+    chown -R mm:mm "$INSTALL_DIR" 2>/dev/null || true
     
     log "Files installed"
 }
