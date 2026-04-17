@@ -21,6 +21,30 @@ The following modules are installed by default:
 **Repository:** https://github.com/Jopyth/MMM-Remote-Control  
 **Configuration:** Automatically added to config.js
 
+## Optional: WiFi Management
+
+### MagicMirror WLAN Manager
+**Description:** Automatic WiFi management with HotSpot fallback and web configuration  
+**Repository:** https://github.com/twicemind/magicmirror-wlan  
+**Installation:** Automatically installed by `install-magicmirror-wlan.sh`  
+**Features:**
+- Automatic network monitoring (checks internet connection every 30 seconds)
+- HotSpot fallback when WiFi disconnects
+- Web-based WiFi configuration (port 8765)
+- WiFi scanner and network selection
+- MagicMirror module (MMM-WLANManager) with QR code for mobile access
+- Automatic reconnection when configured network is available
+
+**Services:**
+- `wlan-network-monitor.service` - Background network monitoring
+- `wlan-webui.service` - Configuration WebUI on port 8765
+
+**Access:**
+- WebUI: `http://<raspberry-pi-ip>:8765`
+- When in HotSpot mode: Connect to WiFi "MagicMirror-Setup" (password: magicmirror)
+
+This module is automatically installed during setup and provides seamless WiFi management for your MagicMirror.
+
 ## How it works
 
 - `install-standard-modules.sh` - Installs all standard modules

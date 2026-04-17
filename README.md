@@ -7,10 +7,10 @@ Automatisierte Setup- und Verwaltungslösung für MagicMirror auf Raspberry Pi m
 Dieses Projekt bietet eine vollständige Automatisierung für die Installation und Wartung einer MagicMirror-Installation auf einem Raspberry Pi. Es beinhaltet:
 
 - ✅ Automatische System-Updates (täglich um 02:00 Uhr)
-- ✅ Automatische System-Updates (täglich um 02:00 Uhr)
 - ✅ Automatische Docker-Container-Updates
 - ✅ Automatische MagicMirror-Modul-Updates
 - ✅ Automatische Setup-Self-Updates (aus GitHub)
+- ✅ **WiFi Management** (Automatisch mit HotSpot-Fallback)
 - ✅ WebUI für einfache Verwaltung (responsive Design)
 - ✅ Hostname-Anzeige im Dashboard
 - ✅ Modul-Management (Installation/Deinstallation)
@@ -305,7 +305,73 @@ Logs ansehen:
 tail -f /var/log/magicmirror-setup.log
 ```
 
-## 🐛 Troubleshooting
+## � WiFi Management (MagicMirror WLAN Manager)
+
+Das Setup installiert automatisch das **MagicMirror WLAN Manager** System für nahtlose WiFi-Verwaltung.
+
+### Features
+
+- **Automatische Netzwerk-Überwachung**: Prüft alle 30 Sekunden die Internetverbindung
+- **HotSpot-Fallback**: Startet automatisch einen HotSpot wenn keine Verbindung besteht
+- **Web-Konfiguration**: WiFi-Setup über Browser (Port 8765)
+- **WiFi-Scanner**: Verfügbare Netzwerke scannen und auswählen
+- **MagicMirror-Modul**: QR-Code für schnellen mobilen Zugriff
+- **Automatische Wiederverbindung**: Verbindet sich wieder wenn konfiguriertes Netzwerk verfügbar ist
+
+### Zugriff
+
+**Normal-Modus (mit Internet):**
+```
+http://<raspberry-pi-ip>:8765
+```
+
+**HotSpot-Modus (ohne Internet):**
+1. Verbinden Sie sich mit WiFi "MagicMirror-Setup" (Passwort: `magicmirror`)
+2. Öffnen Sie Browser: `http://10.0.0.1:8765`
+3. Scannen und wählen Sie Ihr WiFi-Netzwerk
+4. System verbindet sich automatisch
+
+### Services
+
+```bash
+# Network Monitor Status
+sudo systemctl status wlan-network-monitor.service
+
+# WebUI Status
+sudo systemctl status wlan-webui.service
+
+# Services neu starten
+sudo systemctl restart wlan-network-monitor.service
+sudo systemctl restart wlan-webui.service
+
+# Logs ansehen
+tail -f /var/log/magicmirror-wlan.log
+```
+
+### MagicMirror-Modul
+
+Das Modul **MMM-WLANManager** wird automatisch installiert und zeigt:
+- Aktuellen Verbindungsstatus
+- QR-Code zum schnellen Zugriff auf die WebUI
+- Network SSID und Signal-Stärke
+
+**Konfiguration in config.js:**
+```javascript
+{
+    module: "MMM-WLANManager",
+    position: "bottom_right",
+    config: {
+        showQRCode: true,
+        updateInterval: 60000  // Update alle 60 Sekunden
+    }
+}
+```
+
+### Dokumentation
+
+Vollständige Dokumentation: https://github.com/twicemind/magicmirror-wlan
+
+## �🐛 Troubleshooting
 
 ### WebUI ist nicht erreichbar
 
@@ -367,13 +433,14 @@ magicmirror-setup/
 │   ├── mm-webui.service
 │   └── mm-splash.service
 ├── webui/                      # Flask WebUI
-│   ├── app.py                 # Haupt-Anwendung
 │   ├── requirements.txt       # Python-Abhängigkeiten
 │   └── templates/             # HTML-Templates
 ├── initial-config/            # Initiale Konfiguration
 │   ├── config.json           # Beispiel-Konfiguration
 │   └── custom.css            # Beispiel-CSS
 ├── initial-modules/           # Initiale Module (optional)
+│   ├── install-standard-modules.sh     # Standard MagicMirror Module
+│   └── install-magicmirror-wlan.sh     # WiFi Management System
 ├── assets/                    # Assets (Splash-Screen, etc.)
 └── README.md                  # Diese Datei
 ```

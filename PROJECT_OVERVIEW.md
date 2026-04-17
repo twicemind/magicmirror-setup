@@ -46,7 +46,16 @@ Dieses Setup baut auf **MagicMirrorOS** auf, einem Debian-basierten Betriebssyst
 - Display-Orientierung
 - Log-Viewer
 
-### 4. **Scripts & Tools**
+### 5. **Scripts & Tools**
+- Modular aufgebaute Shell-Scripts
+- Python-basierte WebUI mit Flask
+- Systemd-Integration für Services
+
+### 6agicMirror-Modul**: QR-Code für mobilen Zugriff auf WebUI
+- **Automatische Wiederverbindung**: Wenn konfiguriertes Netzwerk verfügbar wird
+- **Dokumentation**: https://github.com/twicemind/magicmirror-wlan
+
+### 5. **Scripts & Tools**
 - Modular aufgebaute Shell-Scripts
 - Python-basierte WebUI mit Flask
 - Systemd-Integration für Services
@@ -105,6 +114,8 @@ magicmirror-setup/
 │   └── custom.css                  # Beispiel Custom-CSS
 │
 ├── 🧩 initial-modules/             # Initiale Module (optional)
+│   ├── install-standard-modules.sh # Standard MagicMirror Module
+│   ├── install-magicmirror-wlan.sh # WiFi Management System
 │   └── install-pir-sensor.example.sh
 │
 ├── 🎨 assets/                      # Assets
