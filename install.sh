@@ -300,7 +300,11 @@ install_services() {
     
     # Setup sudoers for update-setup.sh (passwordless sudo for user mm)
     if [ ! -f /etc/sudoers.d/mm-magicmirror-setup ]; then
-        echo "mm ALL=(ALL) NOPASSWD: /opt/magicmirror-setup/scripts/update-setup.sh" > /etc/sudoers.d/mm-magicmirror-setup
+        cat > /etc/sudoers.d/mm-magicmirror-setup <<EOF
+# Allow user mm to run update-setup.sh without password
+mm ALL=(ALL) NOPASSWD: /opt/magicmirror-setup/scripts/update-setup.sh
+mm ALL=(ALL) NOPASSWD: /usr/bin/bash /opt/magicmirror-setup/scripts/update-setup.sh
+EOF
         chmod 440 /etc/sudoers.d/mm-magicmirror-setup
         log "Sudoers rule configured for setup updates"
     fi

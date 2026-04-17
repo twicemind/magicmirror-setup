@@ -312,16 +312,24 @@ def api_update_setup():
     script_path = os.path.join(SCRIPTS_DIR, "update-setup.sh")
     
     if not os.path.exists(script_path):
+        logger.error(f"Script not found: {script_path}")
         return jsonify({"success": False, "message": "Script not found"})
     
     try:
         cmd = ["sudo", "bash", script_path]
+        logger.info(f"Running update command: {' '.join(cmd)}")
+        
         result = subprocess.run(
             cmd,
             capture_output=True,
             text=True,
             timeout=300
         )
+        
+        logger.info(f"Update result: returncode={result.returncode}")
+        logger.info(f"Stdout: {result.stdout}")
+        if result.stderr:
+            logger.warning(f"Stderr: {result.stderr}")
         
         return jsonify({
             "success": result.returncode == 0,
@@ -330,9 +338,10 @@ def api_update_setup():
             "stderr": result.stderr
         })
     except subprocess.TimeoutExpired:
+        logger.error("Update timeout after 300 seconds")
         return jsonify({"success": False, "message": "Update timeout"})
     except Exception as e:
-        logger.error(f"Error updating setup: {e}")
+        logger.error(f"Error updating setup: {e}", exc_info=True)
         return jsonify({"success": False, "message": str(e)})
 
 

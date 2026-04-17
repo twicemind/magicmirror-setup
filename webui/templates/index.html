@@ -516,17 +516,25 @@
         
         showNotification('Updating setup... This may take a few minutes.', 'info');
         
-        const data = await apiCall('/api/setup/update', {
-            method: 'POST'
-        });
-        
-        if (data.success) {
-            showNotification('Setup updated successfully! WebUI will reload in 5 seconds...', 'success');
-            setTimeout(() => {
-                window.location.reload();
-            }, 5000);
-        } else {
-            showNotification('Update failed: ' + data.message, 'error');
+        try {
+            const data = await apiCall('/api/setup/update', {
+                method: 'POST'
+            });
+            
+            if (data.success) {
+                showNotification('Setup updated successfully! WebUI will reload in 5 seconds...', 'success');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 5000);
+            } else {
+                showNotification('Update failed: ' + data.message, 'error');
+                console.error('Update error:', data);
+                button.disabled = false;
+                button.querySelector('.button-text').textContent = originalText;
+            }
+        } catch (error) {
+            showNotification('Update failed: ' + error.message, 'error');
+            console.error('Update exception:', error);
             button.disabled = false;
             button.querySelector('.button-text').textContent = originalText;
         }
