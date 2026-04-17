@@ -125,6 +125,7 @@ setup_webui() {
     
     # Create virtual environment
     python3 -m venv venv
+    # shellcheck disable=SC1091
     source venv/bin/activate
     
     # Install dependencies
