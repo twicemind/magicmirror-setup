@@ -190,7 +190,7 @@ def api_get_config():
             # Return example config
             example_config = {
                 "address": "localhost",
-                "port": 8080,
+                "port": 8081,
                 "language": "de",
                 "modules": [
                     {
@@ -343,8 +343,8 @@ if __name__ == '__main__':
     print("\n✅ Running in local test mode")
     print(f"📁 Config directory: {CONFIG_DIR}")
     print(f"📦 Modules directory: {MODULES_DIR}")
-    print("\n🌐 WebUI will be available at: http://localhost:8080")
+    print("\n🌐 WebUI will be available at: http://localhost:8081")
     print("\n⚠️  Note: All operations are mocked and won't affect your system")
     print("="*60 + "\n")
     
-    app.run(host='0.0.0.0', port=8080, debug=True)
+    app.run(host='0.0.0.0', port=8081, debug=True)

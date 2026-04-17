@@ -97,8 +97,10 @@ Siehe [INSTALLATION.md](INSTALLATION.md) für eine detaillierte Schritt-für-Sch
 Nach der Installation ist die WebUI unter folgender Adresse erreichbar:
 
 ```
-http://<raspberry-pi-ip>:8080
+http://<raspberry-pi-ip>:8081
 ```
+
+**Hinweis:** Port 8081 wird verwendet, da MagicMirror selbst auf Port 8080 läuft.
 
 ### Features der WebUI
 

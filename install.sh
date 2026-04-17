@@ -269,7 +269,7 @@ setup_webui() {
     systemctl enable mm-webui.service
     systemctl start mm-webui.service
     
-    log "WebUI installed and started on port 8080"
+    log "WebUI installed and started on port 8081"
 }
 
 # Setup initial configuration
@@ -348,7 +348,7 @@ show_summary() {
     echo "   - Module updates (daily at 04:00)"
     echo ""
     echo "✅ WebUI installed and running"
-    echo "   Access at: http://$(hostname -I | awk '{print $1}'):8080"
+    echo "   Access at: http://$(hostname -I | awk '{print $1}'):8081"
     echo "   Dashboard displays: $(hostname)"
     echo ""
     echo "📝 Configuration location: $MM_MOUNTS/config/"

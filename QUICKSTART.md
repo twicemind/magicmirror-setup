@@ -15,7 +15,7 @@ Das war's! 🎉
 - ✅ Automatische System-Updates
 - ✅ Docker-Container-Verwaltung
 - ✅ Modul-Update-System
-- ✅ WebUI auf Port 8080
+- ✅ WebUI auf Port 8081 (MagicMirror nutzt 8080)
 - ✅ Alle Management-Scripts
 
 ## 🖥️ WebUI öffnen
@@ -23,12 +23,12 @@ Das war's! 🎉
 Nach der Installation:
 
 ```
-http://<deine-raspberry-pi-ip>:8080
+http://<deine-raspberry-pi-ip>:8081
 ```
 
 Beispiel:
 ```
-http://192.168.1.100:8080
+http://192.168.1.100:8081
 ```
 
 ## ⚙️ Erste Schritte

@@ -24,7 +24,7 @@ sleep 2
 if ps -p $PID > /dev/null 2>&1; then
     echo "✅ Server started successfully (PID: $PID)"
     echo "📋 Log file: webui/logs/test_app.log"
-    echo "🌐 Open: http://localhost:8080"
+    echo "🌐 Open: http://localhost:8081"
     echo ""
     echo "To stop: pkill -f 'python.*test_app.py'"
     echo "To view logs: tail -f webui/logs/test_app.log"

@@ -170,7 +170,7 @@ Nach erfolgreicher Installation (ca. 10-15 Minuten) sollten Sie folgende Ausgabe
    - Module updates (daily at 04:00)
 
 ✅ WebUI installed and running
-   Access at: http://192.168.1.100:8080
+   Access at: http://192.168.1.100:8081
 
 📝 Configuration location: /opt/mm/mounts/config/
 📦 Modules location: /opt/mm/mounts/modules/
@@ -185,7 +185,7 @@ Nach erfolgreicher Installation (ca. 10-15 Minuten) sollten Sie folgende Ausgabe
 Öffnen Sie in Ihrem Browser:
 
 ```
-http://<raspberry-pi-ip>:8080
+http://<raspberry-pi-ip>:8081
 ```
 
 Sie sollten das Dashboard sehen mit:

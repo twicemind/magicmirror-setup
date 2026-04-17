@@ -19,7 +19,7 @@ cd "$(dirname "$0")"
 
 echo "📦 Erstelle Test-Verzeichnisse..."
 mkdir -p /tmp/mm-test/{config,modules}
-echo '{"address":"localhost","port":8080,"language":"de","modules":[{"module":"clock","position":"top_left"}]}' > /tmp/mm-test/config/config.json
+echo '{"address":"localhost","port":8081,"language":"de","modules":[{"module":"clock","position":"top_left"}]}' > /tmp/mm-test/config/config.json
 
 # Erstelle Mock-Module
 mkdir -p /tmp/mm-test/modules/MMM-TestModule
@@ -50,7 +50,7 @@ fi
 echo "🚀 Starte WebUI im Test-Modus..."
 echo ""
 echo "Die WebUI wird verfügbar sein unter:"
-echo "👉 http://localhost:8080"
+echo "👉 http://localhost:8081"
 echo ""
 echo "Drücken Sie Ctrl+C zum Beenden"
 echo ""
