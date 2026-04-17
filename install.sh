@@ -552,6 +552,13 @@ show_summary() {
     # Check if MagicMirror container is running and start if needed
     if docker ps --format '{{.Names}}' 2>/dev/null | grep -q "^mm$"; then
         echo "✅ MagicMirror container is running"
+        
+        # Container is already running, check if we need to install modules
+        if [ -d "$INSTALL_DIR/initial-modules" ] && [ "$(ls -A $INSTALL_DIR/initial-modules 2>/dev/null)" ]; then
+            echo ""
+            echo "📦 Installing initial modules..."
+            install_initial_modules
+        fi
     else
         echo "⚠️  MagicMirror container is NOT running"
         echo ""
@@ -585,13 +592,6 @@ show_summary() {
             echo "To start MagicMirror:"
             echo "   cd /opt/mm/run"
             echo "   docker compose up -d"
-        fi
-    else
-        # Container is already running, check if we need to install modules
-        if [ -d "$INSTALL_DIR/initial-modules" ] && [ "$(ls -A $INSTALL_DIR/initial-modules 2>/dev/null)" ]; then
-            echo ""
-            echo "📦 Installing initial modules..."
-            install_initial_modules
         fi
     fi
     
