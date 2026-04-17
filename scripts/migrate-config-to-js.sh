@@ -38,10 +38,9 @@ if [ -f "$CONFIG_JSON" ]; then
     cp "$CONFIG_JSON" "$BACKUP_FILE"
     log "   Backup created: $BACKUP_FILE"
     
-    # Read JSON file
-    JSON_CONTENT=$(cat "$CONFIG_JSON")
-    
     # Create config.js with proper JavaScript format
+    # Note: We create a default config instead of converting JSON
+    # as the formats are incompatible (JSON vs JavaScript)
     cat > "$CONFIG_JS" <<'EOF'
 /* MagicMirror² Config
  *
