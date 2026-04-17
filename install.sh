@@ -250,8 +250,10 @@ setup_initial_config() {
     if [ -d "$INSTALL_DIR/initial-modules" ] && [ "$(ls -A $INSTALL_DIR/initial-modules)" ]; then
         log "Installing initial modules..."
         for module_file in "$INSTALL_DIR/initial-modules"/*.sh; do
-            if [ -f "$module_file" ]; then
-                bash "$module_file"
+            # Skip example files
+            if [ -f "$module_file" ] && [[ ! "$module_file" =~ \.example\.sh$ ]]; then
+                log "Running $(basename "$module_file")..."
+                bash "$module_file" || log_warning "Module installation script failed (this is OK if MM container isn't running yet)"
             fi
         done
     fi
