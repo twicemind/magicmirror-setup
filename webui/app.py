@@ -387,7 +387,7 @@ def api_check_setup_update():
 
 @app.route('/api/setup/update', methods=['POST'])
 def api_update_setup():
-    """Update the setup itself"""
+    """Update the setup itself (runs asynchronously)"""
     # Run with sudo (passwordless sudo configured in /etc/sudoers.d/mm-magicmirror-setup)
     script_path = os.path.join(SCRIPTS_DIR, "update-setup.sh")
     
@@ -397,27 +397,26 @@ def api_update_setup():
     
     try:
         cmd = ["sudo", "bash", script_path]
-        logger.info(f"Running update command: {' '.join(cmd)}")
+        logger.info(f"Running update command (async): {' '.join(cmd)}")
         
-        result = subprocess.run(
+        # Start the update script asynchronously
+        # This allows the HTTP response to be sent immediately
+        # The script will restart the WebUI when done
+        subprocess.Popen(
             cmd,
-            capture_output=True,
-            text=True,
-            timeout=300
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True  # Detach from parent process
         )
         
-        logger.info(f"Update result: returncode={result.returncode}")
-        logger.info(f"Stdout: {result.stdout}")
-        if result.stderr:
-            logger.warning(f"Stderr: {result.stderr}")
+        logger.info("Update script started in background")
         
         return jsonify({
-            "success": result.returncode == 0,
-            "message": result.stdout if result.returncode == 0 else result.stderr,
-            "stdout": result.stdout,
-            "stderr": result.stderr
+            "success": True,
+            "message": "Update started. The WebUI will restart automatically in about 30 seconds. Please reload the page after waiting.",
+            "async": True
         })
-    except subprocess.TimeoutExpired:
+    except Exception as e:
         logger.error("Update timeout after 300 seconds")
         return jsonify({"success": False, "message": "Update timeout"})
     except Exception as e:
