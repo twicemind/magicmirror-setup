@@ -56,7 +56,7 @@ log "New version: $NEW_VERSION"
 log "========================================="
 
 # Restart WebUI if running as root
-if [ "$EUID" -eq 0 ]; then
+if [ "$(id -u)" -eq 0 ]; then
     log "Restarting WebUI service..."
     systemctl restart mm-webui.service || log "Note: Run 'sudo systemctl restart mm-webui.service' to apply changes"
 else

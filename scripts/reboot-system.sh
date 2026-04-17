@@ -20,8 +20,8 @@ log "System reboot requested via WebUI"
 log "========================================="
 
 # Check if we're running as root
-if [ "$EUID" -ne 0 ]; then
-    log_error "This script must be run as root"
+if [ "$(id -u)" -ne 0 ]; then
+    log_error "This script must be run as root (use: sudo bash $0)"
     exit 1
 fi
 
