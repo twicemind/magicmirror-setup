@@ -12,10 +12,6 @@ log() {
     echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
 }
 
-log_error() {
-    echo "[$(date +'%Y-%m-%d %H:%M:%S')] ERROR: $1" | tee -a "$LOG_FILE"
-}
-
 log "========================================="
 log "Quick update from Git"
 log "========================================="
