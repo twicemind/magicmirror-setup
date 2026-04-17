@@ -359,8 +359,9 @@
     // Trigger update
     async function triggerUpdate(type, event) {
         const button = event ? event.target.closest('button') : null;
+        const originalText = button ? button.querySelector('.button-text').textContent : null;
+        
         if (button) {
-            const originalText = button.querySelector('.button-text').textContent;
             button.disabled = true;
             button.querySelector('.button-text').innerHTML = '<span class="loading"></span> Updating...';
         }
@@ -369,15 +370,32 @@
             method: 'POST'
         });
         
-        if (button) {
-            button.disabled = false;
-            button.querySelector('.button-text').textContent = button.dataset.originalText || 'Update';
-        }
-        
         if (data.success) {
-            showNotification(`${type.toUpperCase()} update completed`, 'success');
+            if (data.async) {
+                // Async update - show message and keep button disabled
+                showNotification(data.message, 'info');
+                if (button) {
+                    button.querySelector('.button-text').textContent = 'Update läuft...';
+                    // Re-enable after 60 seconds
+                    setTimeout(() => {
+                        button.disabled = false;
+                        button.querySelector('.button-text').textContent = originalText;
+                    }, 60000);
+                }
+            } else {
+                // Sync update completed
+                showNotification(`${type.toUpperCase()} update completed`, 'success');
+                if (button) {
+                    button.disabled = false;
+                    button.querySelector('.button-text').textContent = originalText;
+                }
+            }
         } else {
             showNotification(`Update failed: ${data.message}`, 'error');
+            if (button) {
+                button.disabled = false;
+                button.querySelector('.button-text').textContent = originalText;
+            }
         }
     }
     
