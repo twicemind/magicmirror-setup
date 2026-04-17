@@ -145,6 +145,45 @@ check_environment() {
     log "Environment check passed"
 }
 
+# Initialize MagicMirror if not already done
+initialize_magicmirror() {
+    local marker_file="/opt/mm/.magicmirror-initialized"
+    
+    # Check if MagicMirror was already initialized
+    if [ -f "$marker_file" ]; then
+        log "MagicMirror already initialized (found marker file)"
+        return 0
+    fi
+    
+    # Check if install script exists
+    if [ ! -f "/opt/mm/install/install.sh" ]; then
+        log_warning "MagicMirror install script not found at /opt/mm/install/install.sh"
+        log_warning "Skipping automatic MagicMirror initialization"
+        return 0
+    fi
+    
+    log "========================================="
+    log "Initializing MagicMirror with Electron"
+    log "========================================="
+    log "This will install MagicMirror Docker container and Electron."
+    log "This may take 5-10 minutes..."
+    
+    # Run MagicMirror installation
+    cd /opt/mm/install || exit 1
+    if bash install.sh electron; then
+        # Create marker file to prevent re-initialization
+        touch "$marker_file"
+        log "✓ MagicMirror initialized successfully"
+        log "Container 'mm' should now be running"
+    else
+        log_error "MagicMirror initialization failed"
+        log_error "You may need to run manually: cd /opt/mm/install && sudo bash install.sh electron"
+        # Don't exit, continue with rest of setup
+    fi
+    
+    cd - > /dev/null || exit 1
+}
+
 # Initial system update
 initial_update() {
     log "Starting initial system update..."
@@ -338,6 +377,7 @@ main() {
     
     check_root
     check_environment
+    initialize_magicmirror
     initial_update
     install_files
     install_services

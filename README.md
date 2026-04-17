@@ -36,24 +36,56 @@ Dieses Projekt bietet eine vollständige Automatisierung für die Installation u
 
 ## 🚀 Quick Start
 
-### Option 1: Installation via curl (empfohlen)
+### Ein-Befehl-Installation (empfohlen)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/twicemind/magicmirror-setup/main/install.sh | sudo bash
 ```
 
-### Option 2: Installation via git
+**Das war's!** Das Script:
+1. ✅ Prüft ob MagicMirror bereits initialisiert wurde
+2. ✅ Führt automatisch `/opt/mm/install/install.sh electron` aus (falls nötig)
+3. ✅ Installiert WebUI, Timer und alle Management-Tools
+4. ✅ Startet die WebUI auf Port 8080
+
+⏱️ **Erste Installation:** ca. 10-15 Minuten  
+⏱️ **Update-Installation:** ca. 2-3 Minuten
+
+### Alternative: Manuelle Installation
 
 ```bash
-# Repository klonen
-git clone https://github.com/twicemind/magicmirror-setup.git
-cd magicmirror-setup
+# MagicMirror manuell initialisieren (einmalig)
+cd /opt/mm/install
+sudo bash install.sh electron
 
-# Installation starten
-sudo bash install.sh
+# Dann MagicMirror Setup installieren
+curl -fsSL https://raw.githubusercontent.com/twicemind/magicmirror-setup/main/install.sh | sudo bash
 ```
 
-## 📖 Vollständige Installationsanleitung
+## � MagicMirror Verwaltung
+
+### Container starten/stoppen/neustarten
+
+Nach der ersten Installation nutzen Sie die Standard-MagicMirror-Befehle:
+
+```bash
+# Container starten
+cd /opt/mm
+docker compose up -d
+
+# Container stoppen
+docker compose down
+
+# Container neustarten
+docker compose restart
+
+# Logs anzeigen
+docker compose logs -f
+```
+
+**Wichtig:** Die automatische Initialisierung (`/opt/mm/install/install.sh electron`) wird nur **einmal** beim ersten Setup ausgeführt. Eine Marker-Datei `/opt/mm/.magicmirror-initialized` verhindert eine erneute Initialisierung bei Updates.
+
+## �📖 Vollständige Installationsanleitung
 
 Siehe [INSTALLATION.md](INSTALLATION.md) für eine detaillierte Schritt-für-Schritt-Anleitung.
 

@@ -7,8 +7,8 @@ Diese Anleitung führt Sie Schritt für Schritt durch die Installation von Magic
 1. [Vorbereitung](#vorbereitung)
 2. [MagicMirrorOS Installation](#magicmirroros-installation)
 3. [Erste Schritte nach dem Boot](#erste-schritte-nach-dem-boot)
-4. [MagicMirror Setup Installation](#magicmirror-setup-installation)
-5. [Initiale Konfiguration](#initiale-konfiguration)
+4. [Nach der Installation](#nach-der-installation)
+5. [Erstkonfiguration über WebUI](#erstkonfiguration-über-webui)
 6. [Verifizierung](#verifizierung)
 7. [Nächste Schritte](#nächste-schritte)
 
@@ -112,70 +112,50 @@ Beim ersten Login:
 - Bestätigen Sie den Fingerprint mit "yes"
 - Geben Sie Ihr Passwort ein
 
-### Schritt 3.3: MagicMirror vorbereiten
+### Schritt 3.3: MagicMirror Setup installieren
 
-**Wichtig:** MagicMirrorOS liefert bereits MagicMirror in `/opt/mm` mit. Nach dem ersten Boot müssen Sie nur noch den Docker-Container starten:
+**Das MagicMirror Setup übernimmt die MagicMirror-Initialisierung automatisch!**
 
-```bash
-# Optional: MagicMirror mit Electron (Vollbild-Modus) installieren
-cd /opt/mm/install/
-sudo bash install.sh electron
-```
-
-**⏱️ Dieser Vorgang dauert ca. 5-10 Minuten**
-
-Nach Abschluss starten Sie den MagicMirror-Container:
-
-```bash
-cd /opt/mm
-docker compose up -d
-```
-
-Verifizieren Sie, dass der Container läuft:
-
-```bash
-docker ps
-# Sie sollten einen Container namens "mm" sehen
-```
-
-**Hinweis:** Das MagicMirror Setup (nächster Schritt) kann auch installiert werden, BEVOR der MagicMirror-Container läuft. Modul-Installationen funktionieren aber erst nach dem Start des Containers.
-
----
-
-## 4. MagicMirror Setup Installation
-
-### Schritt 4.1: Installation via curl (empfohlen)
+Führen Sie einfach aus:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/twicemind/magicmirror-setup/main/install.sh | sudo bash
 ```
 
-**Alternative: Installation via git**
+**Was passiert dabei?**
+
+1. **Prüft** ob MagicMirror bereits initialisiert wurde (Marker-Datei `/opt/mm/.magicmirror-initialized`)
+2. **Falls nicht:** Führt automatisch `bash /opt/mm/install/install.sh electron` aus
+3. Installiert das MagicMirror Setup (WebUI, Timer, Scripts)
+4. Setzt Marker-Datei, damit die initiale Installation nicht wiederholt wird
+
+**⏱️ Die erste Installation dauert ca. 10-15 Minuten** (inkl. MagicMirror-Initialisierung)
+
+**Alternative: Manuelle Installation**
+
+Wenn Sie MagicMirror manuell initialisieren möchten:
 
 ```bash
-cd /home/mm
-git clone https://github.com/twicemind/magicmirror-setup.git
-cd magicmirror-setup
-sudo bash install.sh
+# 1. Manuell MagicMirror installieren
+cd /opt/mm/install/
+sudo bash install.sh electron
+
+# 2. Dann MagicMirror Setup installieren
+curl -fsSL https://raw.githubusercontent.com/twicemind/magicmirror-setup/main/install.sh | sudo bash
 ```
 
-### Schritt 4.2: Installationsprozess
+**Wichtig:** Bei Updates oder Restarts nutzt MagicMirror die Standard-Wege:
+- Start: `cd /opt/mm && docker compose up -d`
+- Stop: `docker compose down`
+- Restart: `docker compose restart`
 
-Das Installationsskript führt automatisch folgende Schritte durch:
+---
 
-1. ✅ System-Update (apt-get update & upgrade)
-2. ✅ Installation notwendiger Pakete (Python, Flask, jq, fbi, etc.)
-3. ✅ Kopieren der Dateien nach `/opt/magicmirror-setup`
-4. ✅ Installation der Systemd-Services und Timer
-5. ✅ Einrichtung der WebUI mit Python Virtual Environment
-6. ✅ Installation der initialen Konfiguration (falls vorhanden)
-7. ✅ Einrichtung des Boot-Splash-Screens (falls vorhanden)
+## 4. Nach der Installation
 
-**⏱️ Die Installation dauert ca. 5-10 Minuten**
+### Schritt 4.1: Installation verifizieren
 
-### Schritt 4.3: Installation verifizieren
-
-Nach erfolgreicher Installation sollten Sie folgende Ausgabe sehen:
+Nach erfolgreicher Installation (ca. 10-15 Minuten) sollten Sie folgende Ausgabe sehen:
 
 ```
 ======================================
@@ -183,10 +163,11 @@ Nach erfolgreicher Installation sollten Sie folgende Ausgabe sehen:
 ======================================
 
 ✅ System updated
+✅ MagicMirror initialized with Electron
 ✅ Automatic update services installed:
    - OS updates (daily at 02:00)
-   - Docker container updates (daily at 02:00)
-   - Module updates (daily at 02:00)
+   - Docker container updates (daily at 03:00)
+   - Module updates (daily at 04:00)
 
 ✅ WebUI installed and running
    Access at: http://192.168.1.100:8080
@@ -197,7 +178,7 @@ Nach erfolgreicher Installation sollten Sie folgende Ausgabe sehen:
 
 ---
 
-## 5. Initiale Konfiguration
+## 5. Erstkonfiguration über WebUI
 
 ### Schritt 5.1: WebUI öffnen
 

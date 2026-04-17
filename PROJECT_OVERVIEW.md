@@ -27,13 +27,16 @@ Dieses Setup baut auf **MagicMirrorOS** auf, einem Debian-basierten Betriebssyst
 
 ### 1. **Automatisierte Installation**
 - Ein-Befehl Setup via curl
+- **Automatische MagicMirror-Initialisierung**: Führt `/opt/mm/install/install.sh electron` automatisch aus (nur beim ersten Mal)
+- Marker-basierte Erkennung: Verhindert Doppel-Initialisierung via `/opt/mm/.magicmirror-initialized`
 - Vollautomatische Konfiguration aller Services
 - Initiale Konfigurationsunterstützung
 
 ### 2. **Automatische Updates**
 - **OS-Updates**: Täglich um 02:00 Uhr mit Auto-Reboot
-- **Docker-Container-Updates**: Automatische Image-Aktualisierung
+- **Docker-Container-Updates**: Automatische Image-Aktualisierung (nutzt Standard `docker compose`)
 - **Modul-Updates**: Git-basierte Module werden automatisch aktualisiert
+- **Setup-Self-Updates**: Setup aktualisiert sich selbst aus GitHub
 
 ### 3. **WebUI Management**
 - Modern gestaltetes Web-Interface auf Port 8080
