@@ -193,9 +193,36 @@ def api_remove_module(module_name):
 
 @app.route('/api/modules/update', methods=['POST'])
 def api_update_modules():
-    """Update all modules"""
-    result = run_script("update-modules.sh", use_sudo=True)
-    return jsonify(result)
+    """Update all modules (runs asynchronously)"""
+    script_path = os.path.join(SCRIPTS_DIR, "update-modules.sh")
+    
+    if not os.path.exists(script_path):
+        return jsonify({"success": False, "message": "Script not found"})
+    
+    try:
+        cmd = ["sudo", "bash", script_path]
+        logger.info(f"Running module update command (async): {' '.join(cmd)}")
+        
+        # Start the update script asynchronously
+        # Module updates can take a long time (git pull + npm install for each module)
+        subprocess.Popen(
+            cmd,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True
+        )
+        
+        logger.info("Module update script started in background")
+        
+        return jsonify({
+            "success": True,
+            "message": "Module update started. This may take several minutes. The container will restart automatically when done.",
+            "async": True
+        })
+    except Exception as e:
+        logger.error(f"Error starting module update: {e}", exc_info=True)
+        return jsonify({"success": False, "message": str(e)})
+
 
 
 @app.route('/api/updates/os', methods=['POST'])
