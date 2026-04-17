@@ -30,7 +30,7 @@ elif ! command -v curl &> /dev/null; then
 fi
 
 # Determine script directory or download from GitHub
-if [ -z "$BASH_SOURCE" ] || [ "$BASH_SOURCE" = "bash" ] || [ "$BASH_SOURCE" = "/dev/stdin" ]; then
+if [ -z "${BASH_SOURCE[0]}" ] || [ "${BASH_SOURCE[0]}" = "bash" ] || [ "${BASH_SOURCE[0]}" = "/dev/stdin" ]; then
     # Script is being piped from curl, need to download files
     GITHUB_REPO="twicemind/magicmirror-setup"
     GITHUB_API="https://api.github.com/repos/$GITHUB_REPO/releases/latest"
