@@ -1,0 +1,226 @@
+name: Auto Release
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.github/**'
+      - '!.github/workflows/auto-release.yml'
+
+jobs:
+  # First, run all tests
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        
+      - name: Validate JSON
+        run: |
+          for file in initial-config/*.json; do
+            if [ -f "$file" ]; then
+              echo "Validating $file..."
+              python3 -m json.tool "$file" > /dev/null
+            fi
+          done
+  
+  # Create release only if tests pass
+  release:
+    needs: tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Get latest tag
+        id: get_tag
+        run: |
+          # Get the latest tag
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "Latest tag: $LATEST_TAG"
+          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_OUTPUT
+          
+          # Extract version numbers
+          VERSION=${LATEST_TAG#v}
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          
+          echo "Current version: $MAJOR.$MINOR.$PATCH"
+          echo "MAJOR=$MAJOR" >> $GITHUB_OUTPUT
+          echo "MINOR=$MINOR" >> $GITHUB_OUTPUT
+          echo "PATCH=$PATCH" >> $GITHUB_OUTPUT
+      
+      - name: Determine version bump
+        id: version_bump
+        run: |
+          # Get commit messages since last tag
+          COMMITS=$(git log ${{ steps.get_tag.outputs.LATEST_TAG }}..HEAD --pretty=format:"%s")
+          
+          echo "Analyzing commits:"
+          echo "$COMMITS"
+          
+          # Check for breaking changes or major features
+          if echo "$COMMITS" | grep -qiE "^(BREAKING CHANGE|feat!|fix!):"; then
+            BUMP="major"
+          elif echo "$COMMITS" | grep -qiE "^feat"; then
+            BUMP="minor"
+          else
+            BUMP="patch"
+          fi
+          
+          echo "Version bump type: $BUMP"
+          echo "BUMP=$BUMP" >> $GITHUB_OUTPUT
+          
+          # Calculate new version
+          MAJOR=${{ steps.get_tag.outputs.MAJOR }}
+          MINOR=${{ steps.get_tag.outputs.MINOR }}
+          PATCH=${{ steps.get_tag.outputs.PATCH }}
+          
+          if [ "$BUMP" == "major" ]; then
+            MAJOR=$((MAJOR + 1))
+            MINOR=0
+            PATCH=0
+          elif [ "$BUMP" == "minor" ]; then
+            MINOR=$((MINOR + 1))
+            PATCH=0
+          else
+            PATCH=$((PATCH + 1))
+          fi
+          
+          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+          NEW_TAG="v$NEW_VERSION"
+          
+          echo "New version: $NEW_VERSION"
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "NEW_TAG=$NEW_TAG" >> $GITHUB_OUTPUT
+      
+      - name: Check if version changed
+        id: check_changes
+        run: |
+          # Check if there are any changes since last tag
+          CHANGES=$(git log ${{ steps.get_tag.outputs.LATEST_TAG }}..HEAD --oneline)
+          if [ -z "$CHANGES" ]; then
+            echo "No changes since last release"
+            echo "HAS_CHANGES=false" >> $GITHUB_OUTPUT
+          else
+            echo "Changes detected"
+            echo "HAS_CHANGES=true" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Update VERSION file
+        if: steps.check_changes.outputs.HAS_CHANGES == 'true'
+        run: |
+          echo "${{ steps.version_bump.outputs.NEW_VERSION }}" > VERSION
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add VERSION
+          git commit -m "chore: bump version to ${{ steps.version_bump.outputs.NEW_VERSION }} [skip ci]" || true
+          git push || true
+      
+      - name: Create release archive
+        if: steps.check_changes.outputs.HAS_CHANGES == 'true'
+        run: |
+          mkdir -p release
+          tar -czf "release/magicmirror-setup-${{ steps.version_bump.outputs.NEW_VERSION }}.tar.gz" \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='release' \
+            --exclude='webui/test_app.py' \
+            --exclude='webui/venv' \
+            --exclude='webui/logs' \
+            --exclude='test-local.sh' \
+            --exclude='start-test-server.sh' \
+            --exclude='*.log' \
+            --exclude='__pycache__' \
+            --exclude='.DS_Store' \
+            .
+          
+          # Create checksums
+          cd release
+          sha256sum "magicmirror-setup-${{ steps.version_bump.outputs.NEW_VERSION }}.tar.gz" > checksums.txt
+      
+      - name: Generate changelog
+        if: steps.check_changes.outputs.HAS_CHANGES == 'true'
+        id: changelog
+        run: |
+          # Generate changelog from commits
+          CHANGELOG=$(git log ${{ steps.get_tag.outputs.LATEST_TAG }}..HEAD \
+            --pretty=format:"- %s (%h)" \
+            --no-merges | \
+            grep -v "\[skip ci\]" || echo "- Minor updates and fixes")
+          
+          # Categorize commits
+          FEATURES=$(echo "$CHANGELOG" | grep -i "^- feat" || echo "")
+          FIXES=$(echo "$CHANGELOG" | grep -i "^- fix" || echo "")
+          OTHERS=$(echo "$CHANGELOG" | grep -vi "^- \(feat\|fix\)" || echo "")
+          
+          # Build formatted changelog
+          FORMATTED_CHANGELOG=""
+          
+          if [ -n "$FEATURES" ]; then
+            FORMATTED_CHANGELOG="${FORMATTED_CHANGELOG}### ✨ New Features\n${FEATURES}\n\n"
+          fi
+          
+          if [ -n "$FIXES" ]; then
+            FORMATTED_CHANGELOG="${FORMATTED_CHANGELOG}### 🐛 Bug Fixes\n${FIXES}\n\n"
+          fi
+          
+          if [ -n "$OTHERS" ]; then
+            FORMATTED_CHANGELOG="${FORMATTED_CHANGELOG}### 🔧 Other Changes\n${OTHERS}\n\n"
+          fi
+          
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$FORMATTED_CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: Create GitHub Release
+        if: steps.check_changes.outputs.HAS_CHANGES == 'true'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version_bump.outputs.NEW_TAG }}
+          name: Release ${{ steps.version_bump.outputs.NEW_VERSION }}
+          body: |
+            ## 🪞 MagicMirror Setup ${{ steps.version_bump.outputs.NEW_VERSION }}
+            
+            ### 📦 Installation
+            
+            **Quick install on Raspberry Pi:**
+            ```bash
+            curl -fsSL https://raw.githubusercontent.com/twicemind/magicmirror-setup/${{ steps.version_bump.outputs.NEW_TAG }}/install.sh | sudo bash
+            ```
+            
+            **Or download and install manually:**
+            ```bash
+            wget https://github.com/twicemind/magicmirror-setup/releases/download/${{ steps.version_bump.outputs.NEW_TAG }}/magicmirror-setup-${{ steps.version_bump.outputs.NEW_VERSION }}.tar.gz
+            tar -xzf magicmirror-setup-${{ steps.version_bump.outputs.NEW_VERSION }}.tar.gz
+            cd magicmirror-setup
+            sudo bash install.sh
+            ```
+            
+            ### 📋 What's Changed
+            
+            ${{ steps.changelog.outputs.changelog }}
+            
+            ### 🌐 WebUI Access
+            
+            After installation, access the WebUI at: `http://<raspberry-ip>:8080`
+            
+            **Full Changelog**: https://github.com/${{ github.repository }}/compare/${{ steps.get_tag.outputs.LATEST_TAG }}...${{ steps.version_bump.outputs.NEW_TAG }}
+          files: |
+            release/magicmirror-setup-${{ steps.version_bump.outputs.NEW_VERSION }}.tar.gz
+            release/checksums.txt
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
