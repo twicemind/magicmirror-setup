@@ -140,6 +140,15 @@ rm -rf "$TEMP_DIR"
 # Restart WebUI service in the background after a short delay
 # This allows the HTTP response to be sent before the service restarts
 log "Scheduling WebUI restart in 3 seconds..."
-(sleep 3 && systemctl restart mm-webui.service) &
+(
+    sleep 3
+    log "Restarting WebUI service..."
+    if systemctl restart mm-webui.service; then
+        log "WebUI service restarted successfully"
+    else
+        log "WebUI restart failed, trying start..."
+        systemctl start mm-webui.service && log "WebUI service started" || log "ERROR: WebUI service failed to start"
+    fi
+) >> "$LOG_FILE" 2>&1 &
 
 exit 0
