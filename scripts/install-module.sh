@@ -59,4 +59,14 @@ if [ -f "$MODULES_DIR/$MODULE_NAME/package.json" ]; then
 fi
 
 log "Module $MODULE_NAME installed successfully"
-log "Remember to add the module to your config.json and restart MagicMirror"
+
+# Restart container to load the new module
+log "Restarting MagicMirror container to load new module..."
+if docker restart "$CONTAINER_NAME"; then
+    log "Container restarted successfully"
+    log "Module $MODULE_NAME is now active"
+else
+    log_error "Failed to restart container"
+    log "Please restart manually: docker restart $CONTAINER_NAME"
+    exit 1
+fi

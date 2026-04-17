@@ -399,6 +399,16 @@ install_initial_modules() {
         
         if [ $installed_count -gt 0 ]; then
             log "Successfully installed $installed_count module(s)"
+            
+            # Restart container to load new modules
+            log "Restarting MagicMirror container to load new modules..."
+            if docker restart mm 2>&1 | tee -a "$LOG_FILE"; then
+                log "Container restarted successfully"
+                # Wait for container to be ready
+                sleep 5
+            else
+                log_warning "Failed to restart container, please restart manually"
+            fi
         else
             log "No modules were installed"
         fi
